@@ -1,0 +1,50 @@
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>initWorld</title>
+</head>
+<body>
+
+<pre><font size="4"><a href="../index.html">主页</a>-＞<a href="index.html">库函数目录</a>-＞initWorld</font>
+
+<font size="5" color="#0000FF"><strong>功能：</strong></font>
+这个函数用于初始化海龟绘图系统。在每一个海龟绘图程序中，都必须先运行该函数，才能正确执行其他的作图指令。
+
+<font size="5" color="#0000FF"><strong>声明：</strong></font>
+<pre><font color=#0000FF>void </font><font color=#008080>initWorld</font>(<font color=#0000FF>int </font>width, <font color=#0000FF>int </font>height, <font color=#0000FF>double </font>scale = <font color=#800080>1.0</font>);</pre>
+
+<font size="5" color="#0000FF"><strong>参数：</strong></font>
+width
+绘图区的宽度（实际显示窗口的大小为width*scale)
+height
+绘图区的高度（实际显示的窗口大小为height*scale）
+scale
+显示缩放比例，缺省为1
+
+<font size="5" color="#0000FF"><strong>返回值：</strong></font>
+（无）
+
+<font size="5" color="#0000FF"><strong>示例：</strong></font>
+<pre><span style="font-family: Consolas"><span style="color: #ff0000">#include </span><span style="color: #000000">&lt;turtle.h&gt;</span>
+
+<span style="color: #0000ff">int </span><span style="color: #000000">main() {</span>
+    <span style="color: #000000">initWorld(</span><span style="color: #800080">800</span><span style="color: #000000">,</span><span style="color: #800080">600</span><span style="color: #000000">,</span><span style="color: #800080">1</span><span style="color: #000000">);</span>
+    <span style="color: #000000">setPenColor(</span><span style="color: #800080">RED</span><span style="color: #000000">);</span>
+    <span style="color: #000000">setSpeed(</span><span style="color: #800080">100</span><span style="color: #000000">);</span>
+
+    <span style="color: #000000">fd(</span><span style="color: #800080">100</span><span style="color: #000000">);</span>
+    <span style="color: #000000">lt(</span><span style="color: #800080">90</span><span style="color: #000000">);</span>
+    <span style="color: #000000">fd(</span><span style="color: #800080">200</span><span style="color: #000000">);</span>
+    <span style="color: #000000">home();</span>
+    <span style="color: #000000">pause();</span>
+    <span style="color: #000000">hide();</span>
+    <span style="color: #000000">pause();</span>
+    <span style="color: #0000ff">return </span><span style="color: #800080">0</span><span style="color: #000000">;</span>
+<span style="color: #000000">}</span></span>
+</pre>
+
+
+</pre>
+
+</body>
+

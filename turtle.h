@@ -33,6 +33,8 @@ void hide();
 void show();
 void setXY(double x, double y);
 void setAngle(double angle);
+void turnTo(double angle);
+void gotoXY(double x, double y);
 
 #ifdef __cplusplus 
 }

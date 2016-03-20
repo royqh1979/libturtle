@@ -28,6 +28,9 @@
 *.x86_64
 *.hex
 
+#idea files
+.idea
+
 # Debug files
 *.dSYM/
 Makefile.win
