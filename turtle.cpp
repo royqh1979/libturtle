@@ -413,11 +413,50 @@ void setXY(double x, double y) {
     myturtle.y=to_y;
     refreshWorld();
 }
+
+double getX() {
+    int cent_x;
+    cent_x=round(myworld.width/2);
+    return myturtle.x-cent_x;
+}
+double getY() {
+    int cent_y;
+    cent_y=round(myworld.height/2);
+    return cent_y-myturtle.y;
+}
 void setAngle(double angle) {
     myturtle.orient=-angle;
     prepareTurtleIcon();
     refreshWorld();
 }
+double getAngle() {
+    return -myturtle.orient;
+}
+
+TurtleState getState(){
+    TurtleState state;
+    state.x=getX();
+    state.y=getY();
+    state.angle=getAngle();
+    return state;
+}
+
+void setState(TurtleState state){
+    BOOL pd=myturtle.is_pen_down;
+    myturtle.is_pen_down=0;
+    setXY(state.x,state.y);
+    setAngle(state.angle);
+    myturtle.is_pen_down=pd;    
+}
+void faceXY(double x,double y){
+    x=myworld.width/2+x;
+    y=myworld.height/2-y;
+    double delta_x=x-myturtle.x;
+    double delta_y=-(y-myturtle.y);
+    double angle=atan2(delta_y,delta_x)/PI*180;
+    turnTo(angle);
+}
+
 void turnTo(double angle) {
     double turn_angle;
     angle=angle-(int)angle/360*360;
@@ -430,14 +469,13 @@ void turnTo(double angle) {
     rt(turn_angle);
 }
 void gotoXY(double x, double y) {
+    faceXY(x,y); 
+    
     x=myworld.width/2+x;
     y=myworld.height/2-y;
     double delta_x=x-myturtle.x;
     double delta_y=-(y-myturtle.y);
     double step=sqrt(delta_x*delta_x+delta_y*delta_y);
-    double angle=atan2(delta_y,delta_x)/PI*180;
-        
-    turnTo(angle);
     fd(step);
     myturtle.x=x;
     myturtle.y=y;

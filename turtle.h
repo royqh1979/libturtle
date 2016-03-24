@@ -6,6 +6,12 @@
 extern "C" {
 #endif
 
+typedef struct {
+    double x;
+    double y;
+    double angle;
+} TurtleState;
+
 void initWorld(int width,int height, double scale=1.0);
 void fd(double step);
 void forward(double step);
@@ -35,6 +41,12 @@ void setXY(double x, double y);
 void setAngle(double angle);
 void turnTo(double angle);
 void gotoXY(double x, double y);
+double getX();
+double getY();
+double getAngle();
+TurtleState getState();
+void setState(TurtleState state);
+void faceXY(double x,double y);
 
 #ifdef __cplusplus 
 }

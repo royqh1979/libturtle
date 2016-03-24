@@ -1,25 +1,22 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>setXY</title>
+    <title>setState</title>
 </head>
 <body>
 
-<pre><font size="4"><a href="../index.html">主页</a>-＞<a href="index.html">库函数目录</a>-＞setXY</font>
+<pre><font size="4"><a href="../index.html">主页</a>-＞<a href="index.html">库函数目录</a>-＞setState</font>
 
 <font size="5" color="#0000FF"><strong>功能：</strong></font>
-直接设置海龟位置为点(x,y)（没有动画）,不改变海龟朝向
-注意：海龟初始位置为（0,0），横坐标正向为屏幕向右方向，纵坐标正向为屏幕向上方向
-见<a href="world.html">坐标系和海龟朝向说明</a>
+设置海龟位置和朝向，原位置和新位置之间不会留下痕迹。主要和<a href="getState.html">getState函数</a>配合使用，保存和恢复海龟位置朝向。
+如果需要留下移动痕迹，请使用setXY、gotoXY和setAngle
+见<a href="world.html">坐标系和海龟朝向说明</a>以及<a href="TurtleState.html">TurtleState结构说明</a>
 
 <font size="5" color="#0000FF"><strong>声明：</strong></font>
-<pre><span style="font-family: Consolas"><span style="color: #0000ff">void </span><span style="color: #000000">setXY(</span><span style="color: #0000ff">double </span><span style="color: #000000">x, </span><span style="color: #0000ff">double </span><span style="color: #000000">y);</span></span></pre>
+<pre><span style="font-family: Consolas"><span style="color: #0000ff">void </span><span style="color: #000000">setState(</span><span style="color: #0000ff">TurtleState </span><span style="color: #000000">state);</span></span></pre>
 
 <font size="5" color="#0000FF"><strong>参数：</strong></font>
-x
-要移动到的点的横坐标
-y
-要移动到的点的纵坐标
-
+state
+海龟的新位置和朝向
 
 <font size="5" color="#0000FF"><strong>返回值：</strong></font>
 （无）
@@ -31,8 +28,10 @@ y
     <span style="color: #000000">initWorld(</span><span style="color: #800080">800</span><span style="color: #000000">,</span><span style="color: #800080">600</span><span style="color: #000000">,</span><span style="color: #800080">1</span><span style="color: #000000">);</span>
     <span style="color: #000000">setSpeed(</span><span style="color: #800080">50</span><span style="color: #000000">);</span>
 
-    <span style="color: #000000">setXY(</span><span style="color: #800080">0</span>,<span style="color: #800080">100</span><span style="color: #000000">);</span>
-    <span style="color: #000000">setXY(</span><span style="color: #800080">-200</span>,<span style="color: #800080">100</span><span style="color: #000000">);</span>
+    <span style="color: #000000">setAngle(</span><span style="color: #800080">45</span><span style="color: #000000">);</span>
+    <span style="color: #000000">fd(</span><span style="color: #800080">100</span><span style="color: #000000">);</span>
+    <span style="color: #000000">lt(</span><span style="color: #800080">90</span><span style="color: #000000">);</span>
+    <span style="color: #000000">fd(</span><span style="color: #800080">200</span><span style="color: #000000">);</span>
     <span style="color: #000000">home();</span>
     <span style="color: #000000">pause();</span>
     <span style="color: #000000">hide();</span>

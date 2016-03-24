@@ -1,0 +1,58 @@
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>getState</title>
+</head>
+<body>
+
+<pre><font size="4"><a href="../index.html">主页</a>-＞<a href="index.html">库函数目录</a>-＞getState</font>
+
+<font size="5" color="#0000FF"><strong>功能：</strong></font>
+获取海龟当前位置和朝向。主要和<a href="setState.html">setState函数</a>配合使用，保存和恢复海龟位置朝向。
+见<a href="world.html">坐标系和海龟朝向说明</a>以及<a href="TurtleState.html">TurtleState结构说明</a>
+
+<font size="5" color="#0000FF"><strong>声明：</strong></font>
+<pre><span style="font-family: Consolas"><span style="color: #0000ff">TurtleState </span><span style="color: #000000">getX();</span></span></pre>
+
+<font size="5" color="#0000FF"><strong>参数：</strong></font>
+（无）
+
+
+<font size="5" color="#0000FF"><strong>返回值：</strong></font>
+海龟当前位置和朝向
+
+<font size="5" color="#0000FF"><strong>示例：</strong></font>
+<pre><span style="font-family: Consolas"><span style="color: #ff0000">#include </span><span style="color: #000000">&lt;turtle.h&gt;</span>
+
+<span style="color: #0000ff">int </span><span style="color: #000000">main() {</span>
+    <span style="color: #000000">TurtleState state;</span>
+    <span style="color: #0000ff">double </span><span style="color: #000000">x,y,angle;</span>
+    <span style="color: #000000">initWorld(</span><span style="color: #800080">800</span><span style="color: #000000">,</span><span style="color: #800080">600</span><span style="color: #000000">,</span><span style="color: #800080">1</span><span style="color: #000000">);</span>
+    <span style="color: #000000">setSpeed(</span><span style="color: #800080">50</span><span style="color: #000000">);</span>
+
+    <span style="color: #000000">gotoXY(</span><span style="color: #800080">50</span><span style="color: #000000">,</span><span style="color: #800080">50</span><span style="color: #000000">);</span>
+    <span style="color: #000000">state=getState();</span>
+    <span style="color: #000000">gotoXY(</span><span style="color: #800080">100</span><span style="color: #000000">,</span><span style="color: #800080">0</span><span style="color: #000000">);</span>
+    <span style="color: #000000">lt(</span><span style="color: #800080">90</span><span style="color: #000000">);</span>
+    <span style="color: #000000">fd(</span><span style="color: #800080">100</span><span style="color: #000000">);</span>
+    <span style="color: #000000">setState(state);</span>
+
+    <span style="color: #000000">x=getX();</span>
+    <span style="color: #000000">y=getY();</span>
+    <span style="color: #000000">angle=getAngle();</span>
+    <span style="color: #000000">lt(</span><span style="color: #800080">45</span><span style="color: #000000">);</span>
+    <span style="color: #000000">fd(</span><span style="color: #800080">100</span><span style="color: #000000">);</span>
+    <span style="color: #000000">setXY(x,y);</span>
+    <span style="color: #000000">setAngle(angle);</span>
+    <span style="color: #000000">pause();</span>
+    <span style="color: #000000">hide();</span>
+    <span style="color: #000000">pause();</span>
+    <span style="color: #0000ff">return </span><span style="color: #800080">0</span><span style="color: #000000">;</span>
+<span style="color: #000000">}</span>
+</span>
+</pre>
+
+
+</pre>
+
+</body>
+
