@@ -37,6 +37,7 @@ typedef struct {
     BOOL rewind;
     BOOL immediate;
     PIMAGE world_image;
+    int frame_count;
 } World;
 
 static Turtle myturtle;
@@ -47,8 +48,7 @@ static double d2a(double degree) {
 
 static PIMAGE screenImage;
 
-
-static void refreshWorld() {
+static void displayWorld() {
     putimage(screenImage,0,0,myworld.world_image);
     if (myturtle.is_show) {
         putimage_transparent(screenImage,
@@ -59,6 +59,21 @@ static void refreshWorld() {
     putimage(0,0,myworld.width*myworld.scale, myworld.height*myworld.scale,
         screenImage,
         0,0,myworld.width,myworld.height);
+}
+
+static void refreshWorld() {
+    myworld.frame_count++;
+    myworld.frame_count%=myturtle.pen_speed;
+    if (myturtle.pen_speed>100) {
+        int s=myturtle.pen_speed/100;
+        if (myworld.frame_count%s!=1) {
+            return;
+        }
+        delay_ms(10);
+    } else {
+        delay_ms(1000/myturtle.pen_speed);
+    }
+    displayWorld();
 }
 
 static void prepareTurtleOriginIcon() {
@@ -136,6 +151,12 @@ static void prepareTurtleOriginIcon() {
 }
 
 static void prepareTurtleIcon() {
+    if (myturtle.pen_speed>100) {
+        int s=myturtle.pen_speed/100;
+        if (myworld.frame_count%s!=0) {
+            return;
+        }
+    } 
     int height,width;
     int i,j;
     double x,y;
@@ -147,7 +168,7 @@ static void prepareTurtleIcon() {
     if (myturtle.icon!=NULL) {
         delimage(myturtle.icon);
     }
-    
+        
     height=10;
     width=10;    
     myturtle.icon=newimage(width,height);
@@ -204,6 +225,7 @@ void initWorld(int width,int height,double scale){
     myworld.immediate=FALSE;
     myworld.scale=scale;
     myworld.world_image=newimage(width,height);
+    myworld.frame_count=0;
     
     screenImage=newimage(width,height);
     
@@ -270,9 +292,9 @@ void forward(double step){
         myturtle.x=x;
         myturtle.y=y;
         refreshWorld();
-        if (!myworld.immediate) {
-            delay_fps(myturtle.pen_speed);
-        }
+        //if (!myworld.immediate) {
+            //delay_ms(1000/myturtle.pen_speed);
+        //}
     }
 
     //fclose(fp);
@@ -292,14 +314,14 @@ void leftTurn(double degree){
         if (degree>0) {
             for (int i=0;i<degree;i+=2) {
                 myturtle.orient=origin_angle-i;
-                delay_fps(myturtle.pen_speed);
+                //delay_ms(1000/myturtle.pen_speed);
                 prepareTurtleIcon();
                 refreshWorld();
             }
         } else {
             for (int i=0;i<-degree;i+=2) {
                 myturtle.orient=origin_angle+i; 
-                delay_fps(myturtle.pen_speed);           
+                //delay_ms(1000/myturtle.pen_speed);           
                 prepareTurtleIcon();
                 refreshWorld();
             }
@@ -378,7 +400,11 @@ void setPenColor(color_t color){
     setcolor(color);
 }
 void setSpeed(int speed) {
-    myturtle.pen_speed=speed;
+    if (speed>=1) {
+        myturtle.pen_speed=speed;
+    } else {
+        myturtle.pen_speed=1;
+    }
 }
 void setRewind(int isRewind) {
     myworld.rewind=isRewind;
@@ -481,6 +507,17 @@ void gotoXY(double x, double y) {
     myturtle.y=y;
     prepareTurtleIcon();
     refreshWorld();    
+}
+
+double randBetween(double start,double end){
+    return (end-start)*randomf()+start;
+}
+
+void wait() {
+    myworld.frame_count=0;
+    prepareTurtleIcon();
+    displayWorld();
+    pause();
 }
 
 

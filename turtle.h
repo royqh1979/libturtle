@@ -47,6 +47,8 @@ double getAngle();
 TurtleState getState();
 void setState(TurtleState state);
 void faceXY(double x,double y);
+double randBetween(double start,double end);
+void wait();
 
 #ifdef __cplusplus 
 }
