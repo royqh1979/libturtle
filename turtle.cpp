@@ -486,6 +486,9 @@ void faceXY(double x,double y){
 void turnTo(double angle) {
     double turn_angle;
     angle=angle-(int)angle/360*360;
+    if (angle<0) {
+        angle+=360;
+    }
     turn_angle=-angle - myturtle.orient ;
     if (turn_angle>180) {
         turn_angle=360-turn_angle;
