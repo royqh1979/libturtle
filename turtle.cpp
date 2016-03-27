@@ -24,6 +24,8 @@ typedef struct{
     int pen_speed;
     PIMAGE origin_icon;
     PIMAGE icon;
+    double icon_width;
+    double icon_height;
     double icon_x;
     double icon_y;
     BOOL is_show; //ÊÇ·ñÏÔÊ¾º£¹ê
@@ -55,13 +57,11 @@ static void displayWorld() {
     if (myturtle.is_show) {
         putimage_transparent(screenImage,
             myturtle.icon,
-            round(myturtle.x-round(myturtle.icon_x)),
-            round(myturtle.y-round(myturtle.icon_y)),
+            round((myturtle.x-round(myturtle.icon_x))*myworld.scale),
+            round((myturtle.y-round(myturtle.icon_y))*myworld.scale),
             WHITE);
     }
-    putimage(0,0,myworld.width*myworld.scale, myworld.height*myworld.scale,
-        screenImage,
-        0,0,myworld.width,myworld.height);
+    putimage(0,0,screenImage);
 }
 
 static void refreshWorld() {
@@ -85,6 +85,9 @@ static void prepareTurtleOriginIcon() {
     myturtle.origin_icon=newimage(width,height);
     myturtle.icon_x=(width-1)/2.0;
     myturtle.icon_y=(height-1)/2.0;
+    myturtle.icon_height=width*myworld.scale;
+    myturtle.icon_width=height*myworld.scale;
+
 
     setbkcolor(WHITE,myturtle.origin_icon);
     setfillcolor(BLACK,myturtle.origin_icon);
@@ -154,6 +157,7 @@ static void prepareTurtleOriginIcon() {
 }
 
 static void prepareTurtleIcon() {
+    static PIMAGE temp_icon=NULL;
     if (myturtle.pen_speed>100) {
         int s=myturtle.pen_speed/100;
         if (myworld.frame_count%s!=0) {
@@ -165,14 +169,17 @@ static void prepareTurtleIcon() {
     double x,y;
     double to_x,to_y;
     double angle=d2a(90+myturtle.orient);
-
-    if (myturtle.icon!=NULL) {
-        delimage(myturtle.icon);
-    }
-
     height=10;
     width=10;
-    myturtle.icon=newimage(width,height);
+
+    if (myturtle.icon==NULL) {
+        myturtle.icon=newimage(myturtle.icon_width,myturtle.icon_height);
+    }
+    if (temp_icon!=NULL) {
+        delimage(temp_icon);
+    }
+
+    temp_icon=newimage(width,height);
 
     setbkcolor(WHITE,myturtle.icon);
     setfillcolor(BLACK,myturtle.icon);
@@ -193,9 +200,11 @@ static void prepareTurtleIcon() {
             } else if (to_y>=height) {
                 to_y=height-1;
             }
-            putpixel(to_x,to_y,getpixel(j,i,myturtle.origin_icon),myturtle.icon);
+            putpixel(to_x,to_y,getpixel(j,i,myturtle.origin_icon),temp_icon);
         }
     }
+    putimage(myturtle.icon,0,0,myturtle.icon_width,myturtle.icon_height,
+             temp_icon,0,0,width,height);
 
 }
 
@@ -209,7 +218,7 @@ void initWorld(int width,int height,double scale){
     myworld.rewind=TRUE;
     myworld.immediate=FALSE;
     myworld.scale=scale;
-    myworld.world_image=newimage(width,height);
+    myworld.world_image=newimage(width*scale,height*scale);
     myworld.frame_count=0;
     myworld.origin_x=width/2;
     myworld.origin_y=height/2;
@@ -230,7 +239,7 @@ void initWorld(int width,int height,double scale){
     myturtle.is_show=TRUE;
     prepareTurtleOriginIcon();
 
-    screenImage=newimage(width,height);
+    screenImage=newimage(width*scale,height*scale);
 
     setrendermode(RENDER_MANUAL);
     prepareTurtleIcon();
@@ -282,7 +291,7 @@ void forward(double step){
             }
         }
         if (myturtle.is_pen_down) {
-            line(round(old_x),round(old_y),round(x),round(y),myworld.world_image);
+            line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
         }
         old_x=x;old_y=y;
         myturtle.x=x;
@@ -370,7 +379,7 @@ void home(){
     to_x=myworld.origin_x;
     to_y=myworld.origin_y;
     if (myturtle.is_pen_down) {
-        line(myturtle.x,myturtle.y,to_x,to_y,myworld.world_image);
+        line(myturtle.x*myworld.scale,myturtle.y*myworld.scale,to_x*myworld.scale,to_y*myworld.scale,myworld.world_image);
     }
     myturtle.x=to_x;
     myturtle.y=to_y;
@@ -380,6 +389,7 @@ void home(){
 }
 void setPenSize(int size) {
     myturtle.pen_size=size;
+    setlinestyle(SOLID_LINE,NULL,size,myworld.world_image);
     setlinewidth(size,myworld.world_image);
 };
 void setPenColor(color_t color){
@@ -412,18 +422,8 @@ void hide() {
 }
 
 void setXY(double x, double y) {
-    int cent_x,cent_y;
-    double to_x, to_y;
-
-    to_x=myworld.origin_x+x;
-    to_y=myworld.origin_y-y;
-    /*
-    if (myturtle.is_pen_down) {
-        line(myturtle.x,myturtle.y,to_x,to_y,myworld.world_image);
-    }
-    */
-    myturtle.x=to_x;
-    myturtle.y=to_y;
+    myturtle.x=myworld.origin_x+x;
+    myturtle.y=myworld.origin_y-y;
     refreshWorld();
 }
 
