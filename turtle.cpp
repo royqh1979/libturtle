@@ -37,6 +37,8 @@ typedef struct {
     BOOL rewind;
     BOOL immediate;
     PIMAGE world_image;
+    int origin_x;
+    int origin_y;
     int frame_count;
 } World;
 
@@ -199,23 +201,7 @@ static void prepareTurtleIcon() {
 
 
 void initWorld(int width,int height,double scale){
-    int pt[] = {
-        10,0,
-        0,20,
-        20,20
-    };
-    fillpoly(6, pt);
     initgraph(width*scale,height*scale);
-    myturtle.x=round(width/2);
-    myturtle.y=round(height/2);
-    myturtle.orient=-90;
-    myturtle.is_pen_down=TRUE;
-    myturtle.pen_color=BLACK;
-    myturtle.pen_size=1;
-    myturtle.pen_speed=100;
-    myturtle.icon=NULL;
-    myturtle.is_show=TRUE;
-    prepareTurtleOriginIcon();
 
     myworld.width=width;
     myworld.height=height;
@@ -225,14 +211,27 @@ void initWorld(int width,int height,double scale){
     myworld.scale=scale;
     myworld.world_image=newimage(width,height);
     myworld.frame_count=0;
-
-    screenImage=newimage(width,height);
-
+    myworld.origin_x=width/2;
+    myworld.origin_y=height/2;
     setcolor(myturtle.pen_color,myworld.world_image);
     setbkcolor(myworld.back_color, myworld.world_image);
     setfillcolor(myturtle.pen_color, myworld.world_image);
     setlinewidth(myturtle.pen_size, myworld.world_image);
     cleardevice(myworld.world_image);
+
+    myturtle.x=myworld.origin_x;
+    myturtle.y=myworld.origin_y;
+    myturtle.orient=-90;
+    myturtle.is_pen_down=TRUE;
+    myturtle.pen_color=BLACK;
+    myturtle.pen_size=1;
+    myturtle.pen_speed=100;
+    myturtle.icon=NULL;
+    myturtle.is_show=TRUE;
+    prepareTurtleOriginIcon();
+
+    screenImage=newimage(width,height);
+
     setrendermode(RENDER_MANUAL);
     prepareTurtleIcon();
 
@@ -349,13 +348,10 @@ void pu(){
     penUp();
 }
 void clearScreen(){
-    int to_x,to_y;
     cleardevice(myworld.world_image);
 
-    to_x=round(myworld.width/2);
-    to_y=round(myworld.height/2);
-    myturtle.x=to_x;
-    myturtle.y=to_y;
+    myturtle.x=myworld.origin_x;
+    myturtle.y=myworld.origin_y;
     myturtle.orient=-90;
     prepareTurtleIcon();
     refreshWorld();
@@ -371,8 +367,8 @@ void clear(){
 void home(){
     int to_x,to_y;
 
-    to_x=round(myworld.width/2);
-    to_y=round(myworld.height/2);
+    to_x=myworld.origin_x;
+    to_y=myworld.origin_y;
     if (myturtle.is_pen_down) {
         line(myturtle.x,myturtle.y,to_x,to_y,myworld.world_image);
     }
@@ -419,13 +415,13 @@ void setXY(double x, double y) {
     int cent_x,cent_y;
     double to_x, to_y;
 
-    cent_x=round(myworld.width/2);
-    cent_y=round(myworld.height/2);
-    to_x=cent_x+x;
-    to_y=cent_y-y;
+    to_x=myworld.origin_x+x;
+    to_y=myworld.origin_y-y;
+    /*
     if (myturtle.is_pen_down) {
         line(myturtle.x,myturtle.y,to_x,to_y,myworld.world_image);
     }
+    */
     myturtle.x=to_x;
     myturtle.y=to_y;
     refreshWorld();
@@ -466,11 +462,11 @@ void setState(TurtleState state){
     myturtle.is_pen_down=pd;
 }
 void faceXY(double x,double y){
-    x=myworld.width/2+x;
-    y=myworld.height/2-y;
+    x=myworld.origin_x+x;
+    y=myworld.origin_y-y;
     double delta_x=x-myturtle.x;
     double delta_y=-(y-myturtle.y);
-    double angle=d2a(atan2(delta_y,delta_x));
+    double angle=atan2(delta_y,delta_x)/M_PI*180;
     turnTo(angle);
 }
 
@@ -491,8 +487,8 @@ void turnTo(double angle) {
 void gotoXY(double x, double y) {
     faceXY(x,y);
 
-    x=myworld.width/2+x;
-    y=myworld.height/2-y;
+    x=myworld.origin_x+x;
+    y=myworld.origin_y-y;
     double delta_x=x-myturtle.x;
     double delta_y=-(y-myturtle.y);
     double step=sqrt(delta_x*delta_x+delta_y*delta_y);
@@ -512,6 +508,13 @@ void wait() {
     prepareTurtleIcon();
     displayWorld();
     pause();
+}
+
+void setOrigin(int x, int y) {
+    myworld.origin_x=myworld.origin_x+x;
+    myworld.origin_y=myworld.origin_y-y;
+    home();
+    clearScreen();
 }
 
 

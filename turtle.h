@@ -2,7 +2,7 @@
 #define TURTLE_WORLD_H 1
 #include <graphics.h>
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -49,8 +49,9 @@ void setState(TurtleState state);
 void faceXY(double x,double y);
 double randBetween(double start,double end);
 void wait();
+void setOrigin(int x, int y);
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 
