@@ -6,22 +6,10 @@
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="Debug">
-				<Option output="bin/Debug/" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
-				<Option object_output="obj/Debug/" />
-				<Option type="2" />
-				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Compiler>
-					<Add option="-Wall" />
-					<Add option="-g" />
-				</Compiler>
-			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/" prefix_auto="1" extension_auto="1" />
+				<Option output="turtle" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
-				<Option object_output="obj/Release/" />
+				<Option object_output="./" />
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
@@ -34,9 +22,8 @@
 				</Linker>
 			</Target>
 		</Build>
-		<Unit filename="main.cpp">
-			<Option compilerVar="CC" />
-		</Unit>
+		<Unit filename="turtle.cpp" />
+		<Unit filename="turtle.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
