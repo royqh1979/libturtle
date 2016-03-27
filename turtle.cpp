@@ -24,8 +24,8 @@ typedef struct{
     int pen_speed;
     PIMAGE origin_icon;
     PIMAGE icon;
-    int icon_x;
-    int icon_y;
+    double icon_x;
+    double icon_y;
     BOOL is_show; // «∑Òœ‘ æ∫£πÍ 
 } Turtle;
 
@@ -53,7 +53,8 @@ static void displayWorld() {
     if (myturtle.is_show) {
         putimage_transparent(screenImage,
             myturtle.icon,
-            round(myturtle.x-myturtle.icon_x),round(myturtle.y-myturtle.icon_y),
+            round(myturtle.x-round(myturtle.icon_x)),
+            round(myturtle.y-round(myturtle.icon_y)),
             WHITE);
     }
     putimage(0,0,myworld.width*myworld.scale, myworld.height*myworld.scale,
@@ -80,8 +81,8 @@ static void prepareTurtleOriginIcon() {
     int width,height;
     width=10;height=10;
     myturtle.origin_icon=newimage(width,height);
-    myturtle.icon_x=width/2;
-    myturtle.icon_y=height/2;
+    myturtle.icon_x=(width-1)/2.0;
+    myturtle.icon_y=(height-1)/2.0;
     
     setbkcolor(WHITE,myturtle.origin_icon);
     setfillcolor(BLACK,myturtle.origin_icon);
@@ -180,8 +181,8 @@ static void prepareTurtleIcon() {
         for (j=0;j<10;j++) {
             x=j-myturtle.icon_x;
             y=i-myturtle.icon_y;
-            to_x=x*cos(angle)-y*sin(angle)+myturtle.icon_x;
-            to_y=x*sin(angle)+y*cos(angle)+myturtle.icon_y;
+            to_x=round(x*cos(angle)-y*sin(angle)+myturtle.icon_x);
+            to_y=round(x*sin(angle)+y*cos(angle)+myturtle.icon_y);
             if (to_x<0) {
                 to_x=0;
             } else if (to_x>=width) {
@@ -213,7 +214,7 @@ void initWorld(int width,int height,double scale){
     myturtle.is_pen_down=TRUE;
     myturtle.pen_color=BLACK;
     myturtle.pen_size=1;
-    myturtle.pen_speed=1000;
+    myturtle.pen_speed=100;
     myturtle.icon=NULL;
     myturtle.is_show=TRUE;
     prepareTurtleOriginIcon();
@@ -479,7 +480,7 @@ void faceXY(double x,double y){
     y=myworld.height/2-y;
     double delta_x=x-myturtle.x;
     double delta_y=-(y-myturtle.y);
-    double angle=atan2(delta_y,delta_x)/PI*180;
+    double angle=d2a(atan2(delta_y,delta_x));
     turnTo(angle);
 }
 

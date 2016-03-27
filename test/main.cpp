@@ -1,20 +1,15 @@
 #include "../turtle.h"
 
 int main() {
-    initWorld(800,600,1);
-    setSpeed(100000);
+    initWorld(80,60,10);
+    setSpeed(80);
 
-    for(;;){
-        for(int i=0;i<360;i++) {
-            fd(1);
-            lt(1);
-        }
-        fd(2);
-        lt(1);
+    for(int i=0;i<4;i++) {
+        fd(10);
+        lt(90);
     }
-
-    pause();
+    wait();
     hide();
-    pause();
+    wait();
     return 0;
 }
