@@ -2,7 +2,7 @@
 #include <math.h>
 
 #ifndef BOOL
-    typedef int BOOL;
+typedef int BOOL;
 #endif
 #ifndef TRUE
 #define TRUE 1
@@ -14,7 +14,8 @@
 #define BASE_STEP 1
 
 
-typedef struct{
+typedef struct
+{
     double x;
     double y;
     double orient; //Í·Ö¸Ïò½Ç¶È
@@ -31,7 +32,8 @@ typedef struct{
     BOOL is_show; //ÊÇ·ñÏÔÊ¾º£¹ê
 } Turtle;
 
-typedef struct {
+typedef struct
+{
     int width;
     int height;
     double scale;
@@ -46,42 +48,52 @@ typedef struct {
 
 static Turtle myturtle;
 static World myworld;
-static double d2a(double degree) {
+static double d2a(double degree)
+{
     return degree*M_PI/180.0;
 }
 
 static PIMAGE screenImage;
 
-static void displayWorld() {
+static void displayWorld()
+{
     putimage(screenImage,0,0,myworld.world_image);
-    if (myturtle.is_show) {
+    if (myturtle.is_show)
+    {
         putimage_transparent(screenImage,
-            myturtle.icon,
-            round((myturtle.x-round(myturtle.icon_x))*myworld.scale),
-            round((myturtle.y-round(myturtle.icon_y))*myworld.scale),
-            WHITE);
+                             myturtle.icon,
+                             round((myturtle.x-round(myturtle.icon_x))*myworld.scale),
+                             round((myturtle.y-round(myturtle.icon_y))*myworld.scale),
+                             WHITE);
     }
     putimage(0,0,screenImage);
 }
 
-static void refreshWorld() {
+static void refreshWorld()
+{
     myworld.frame_count++;
     myworld.frame_count%=myturtle.pen_speed;
-    if (myturtle.pen_speed>100) {
+    if (myturtle.pen_speed>100)
+    {
         int s=myturtle.pen_speed/100;
-        if (myworld.frame_count%s!=1) {
+        if (myworld.frame_count%s!=1)
+        {
             return;
         }
         delay_ms(10);
-    } else {
+    }
+    else
+    {
         delay_ms(1000/myturtle.pen_speed);
     }
     displayWorld();
 }
 
-static void prepareTurtleOriginIcon() {
+static void prepareTurtleOriginIcon()
+{
     int width,height;
-    width=10;height=10;
+    width=10;
+    height=10;
     myturtle.origin_icon=newimage(width,height);
     myturtle.icon_x=(width-1)/2.0;
     myturtle.icon_y=(height-1)/2.0;
@@ -102,7 +114,7 @@ static void prepareTurtleOriginIcon() {
     putpixel(4,2,LIGHTRED,myturtle.origin_icon);
     putpixel(5,2,LIGHTRED,myturtle.origin_icon);
 
-     //»­¹ê±³ÂÖÀª
+    //»­¹ê±³ÂÖÀª
     putpixel(4,3,RED, myturtle.origin_icon);
     putpixel(5,3,RED, myturtle.origin_icon);
     putpixel(3,4,RED, myturtle.origin_icon);
@@ -156,11 +168,14 @@ static void prepareTurtleOriginIcon() {
     putpixel(5,9,LIGHTRED,myturtle.origin_icon);
 }
 
-static void prepareTurtleIcon() {
+static void prepareTurtleIcon()
+{
     static PIMAGE temp_icon=NULL;
-    if (myturtle.pen_speed>100) {
+    if (myturtle.pen_speed>100)
+    {
         int s=myturtle.pen_speed/100;
-        if (myworld.frame_count%s!=0) {
+        if (myworld.frame_count%s!=0)
+        {
             return;
         }
     }
@@ -172,10 +187,12 @@ static void prepareTurtleIcon() {
     height=10;
     width=10;
 
-    if (myturtle.icon==NULL) {
+    if (myturtle.icon==NULL)
+    {
         myturtle.icon=newimage(myturtle.icon_width,myturtle.icon_height);
     }
-    if (temp_icon!=NULL) {
+    if (temp_icon!=NULL)
+    {
         delimage(temp_icon);
     }
 
@@ -184,20 +201,28 @@ static void prepareTurtleIcon() {
     setbkcolor(WHITE,myturtle.icon);
     setfillcolor(BLACK,myturtle.icon);
     cleardevice(myturtle.icon);
-    for (i=0;i<10;i++) {
-        for (j=0;j<10;j++) {
+    for (i=0; i<10; i++)
+    {
+        for (j=0; j<10; j++)
+        {
             x=j-myturtle.icon_x;
             y=i-myturtle.icon_y;
             to_x=round(x*cos(angle)-y*sin(angle)+myturtle.icon_x);
             to_y=round(x*sin(angle)+y*cos(angle)+myturtle.icon_y);
-            if (to_x<0) {
+            if (to_x<0)
+            {
                 to_x=0;
-            } else if (to_x>=width) {
+            }
+            else if (to_x>=width)
+            {
                 to_x=width-1;
             }
-            if (to_y<0) {
+            if (to_y<0)
+            {
                 to_y=0;
-            } else if (to_y>=height) {
+            }
+            else if (to_y>=height)
+            {
                 to_y=height-1;
             }
             putpixel(to_x,to_y,getpixel(j,i,myturtle.origin_icon),temp_icon);
@@ -209,7 +234,8 @@ static void prepareTurtleIcon() {
 }
 
 
-void initWorld(int width,int height,double scale){
+void initWorld(int width,int height,double scale)
+{
     initgraph(width*scale,height*scale);
 
     myworld.width=width;
@@ -248,16 +274,19 @@ void initWorld(int width,int height,double scale){
 }
 
 
-void fd(double step){
+void fd(double step)
+{
     forward(step);
 }
 
-void forward(double step){
+void forward(double step)
+{
     double delta_x,delta_y;
     double x,y,old_x,old_y;
     delta_x=BASE_STEP*cos(d2a(myturtle.orient));
     delta_y=BASE_STEP*sin(d2a(myturtle.orient));
-    if (step<0) {
+    if (step<0)
+    {
         delta_x=-delta_x;
         delta_y=-delta_y;
         step=-step;
@@ -265,35 +294,48 @@ void forward(double step){
     old_x=x=myturtle.x;
     old_y=y=myturtle.y;
 
-    for (int i=0;i<step;i++){
-        if ((i+1)<step) {
+    for (int i=0; i<step; i++)
+    {
+        if ((i+1)<step)
+        {
             x+=delta_x;
             y+=delta_y;
-        } else {
+        }
+        else
+        {
             x+=(step-i)*delta_x;
             y+=(step-i)*delta_y;
         }
 
-        if (myworld.rewind) {
-            if (x<0) {
+        if (myworld.rewind)
+        {
+            if (x<0)
+            {
                 x+=myworld.width;
                 old_x+=myworld.width;
-            } else if (x>myworld.width) {
+            }
+            else if (x>myworld.width)
+            {
                 x-=myworld.width;
                 old_x-=myworld.width;
             }
-            if (y<0) {
+            if (y<0)
+            {
                 y+=myworld.height;
                 old_y+=myworld.height;
-            } else if (y>myworld.height){
+            }
+            else if (y>myworld.height)
+            {
                 y-=myworld.height;
                 old_y-=myworld.height;
             }
         }
-        if (myturtle.is_pen_down) {
+        if (myturtle.is_pen_down)
+        {
             line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
         }
-        old_x=x;old_y=y;
+        old_x=x;
+        old_y=y;
         myturtle.x=x;
         myturtle.y=y;
         refreshWorld();
@@ -301,26 +343,36 @@ void forward(double step){
     }
 
 }
-void bk(double step){
+void bk(double step)
+{
     backward(step);
 }
-void backward(double step){
+void backward(double step)
+{
     forward(-step);
 }
-void lt(double degree){
+void lt(double degree)
+{
     leftTurn(degree);
 }
-void leftTurn(double degree){
+void leftTurn(double degree)
+{
     double origin_angle=myturtle.orient;
-    if (!myworld.immediate) {
-        if (degree>0) {
-            for (int i=0;i<degree;i+=2) {
+    if (!myworld.immediate)
+    {
+        if (degree>0)
+        {
+            for (int i=0; i<degree; i+=2)
+            {
                 myturtle.orient=origin_angle-i;
                 prepareTurtleIcon();
                 refreshWorld();
             }
-        } else {
-            for (int i=0;i<-degree;i+=2) {
+        }
+        else
+        {
+            for (int i=0; i<-degree; i+=2)
+            {
                 myturtle.orient=origin_angle+i;
                 prepareTurtleIcon();
                 refreshWorld();
@@ -329,34 +381,43 @@ void leftTurn(double degree){
     }
     degree=degree-(int)degree/360*360;
     myturtle.orient=origin_angle-degree;
-    if (myturtle.orient>360) {
+    if (myturtle.orient>360)
+    {
         myturtle.orient-=360;
     }
-    if (myturtle.orient<0) {
+    if (myturtle.orient<0)
+    {
         myturtle.orient+=360;
     }
     prepareTurtleIcon();
     refreshWorld();
 }
-void rt(double degree) {
+void rt(double degree)
+{
     rightTurn(degree);
 }
-void rightTurn(double degree){
+void rightTurn(double degree)
+{
     lt(-degree);
 }
-void pd(){
+void pd()
+{
     penDown();
 }
-void penDown(){
+void penDown()
+{
     myturtle.is_pen_down=TRUE;
 }
-void penUp(){
+void penUp()
+{
     myturtle.is_pen_down=FALSE;
 }
-void pu(){
+void pu()
+{
     penUp();
 }
-void clearScreen(){
+void clearScreen()
+{
     cleardevice(myworld.world_image);
 
     myturtle.x=myworld.origin_x;
@@ -366,19 +427,23 @@ void clearScreen(){
     refreshWorld();
 }
 
-void cs(){
+void cs()
+{
     clearScreen();
 }
-void clear(){
+void clear()
+{
     clearScreen();
 }
 
-void home(){
+void home()
+{
     int to_x,to_y;
 
     to_x=myworld.origin_x;
     to_y=myworld.origin_y;
-    if (myturtle.is_pen_down) {
+    if (myturtle.is_pen_down)
+    {
         line(myturtle.x*myworld.scale,myturtle.y*myworld.scale,to_x*myworld.scale,to_y*myworld.scale,myworld.world_image);
     }
     myturtle.x=to_x;
@@ -387,66 +452,83 @@ void home(){
     prepareTurtleIcon();
     refreshWorld();
 }
-void setPenSize(int size) {
+void setPenSize(int size)
+{
     myturtle.pen_size=size;
-    setlinestyle(SOLID_LINE,NULL,size,myworld.world_image);
+    setlinestyle(SOLID_LINE,0,size,myworld.world_image);
     setlinewidth(size,myworld.world_image);
 };
-void setPenColor(color_t color){
+void setPenColor(color_t color)
+{
     myturtle.pen_color=color;
-    setcolor(color);
+    setcolor(color,myworld.world_image);
 }
-void setSpeed(int speed) {
-    if (speed>=1) {
+void setSpeed(int speed)
+{
+    if (speed>=1)
+    {
         myturtle.pen_speed=speed;
-    } else {
+    }
+    else
+    {
         myturtle.pen_speed=1;
     }
 }
-void setRewind(int isRewind) {
+void setRewind(int isRewind)
+{
     myworld.rewind=isRewind;
 }
-void setImmediate(int isImmediate) {
+void setImmediate(int isImmediate)
+{
     myworld.immediate=isImmediate;
 }
-void pause() {
+void pause()
+{
     getch();
 }
-void show() {
+void show()
+{
     myturtle.is_show=TRUE;
     refreshWorld();
 }
-void hide() {
+void hide()
+{
     myturtle.is_show=FALSE;
     refreshWorld();
 }
 
-void setXY(double x, double y) {
+void setXY(double x, double y)
+{
     myturtle.x=myworld.origin_x+x;
     myturtle.y=myworld.origin_y-y;
     refreshWorld();
 }
 
-double getX() {
+double getX()
+{
     int cent_x;
     cent_x=round(myworld.width/2);
     return myturtle.x-cent_x;
 }
-double getY() {
+double getY()
+{
     int cent_y;
     cent_y=round(myworld.height/2);
     return cent_y-myturtle.y;
 }
-void setAngle(double angle) {
+void setAngle(double angle)
+{
     myturtle.orient=-angle;
     prepareTurtleIcon();
     refreshWorld();
 }
-double getAngle() {
+double getAngle()
+{
     return -myturtle.orient;
 }
 
-TurtleState getState(){
+TurtleState getState()
+{
     TurtleState state;
     state.x=getX();
     state.y=getY();
@@ -454,14 +536,16 @@ TurtleState getState(){
     return state;
 }
 
-void setState(TurtleState state){
+void setState(TurtleState state)
+{
     BOOL pd=myturtle.is_pen_down;
     myturtle.is_pen_down=0;
     setXY(state.x,state.y);
     setAngle(state.angle);
     myturtle.is_pen_down=pd;
 }
-void faceXY(double x,double y){
+void faceXY(double x,double y)
+{
     x=myworld.origin_x+x;
     y=myworld.origin_y-y;
     double delta_x=x-myturtle.x;
@@ -470,21 +554,27 @@ void faceXY(double x,double y){
     turnTo(angle);
 }
 
-void turnTo(double angle) {
+void turnTo(double angle)
+{
     double turn_angle;
     angle=angle-(int)angle/360*360;
-    if (angle<0) {
+    if (angle<0)
+    {
         angle+=360;
     }
     turn_angle=-angle - myturtle.orient ;
-    if (turn_angle>180) {
+    if (turn_angle>180)
+    {
         turn_angle=360-turn_angle;
-    } else if (turn_angle<-180) {
+    }
+    else if (turn_angle<-180)
+    {
         turn_angle=360+turn_angle;
     }
     rt(turn_angle);
 }
-void gotoXY(double x, double y) {
+void gotoXY(double x, double y)
+{
     faceXY(x,y);
 
     x=myworld.origin_x+x;
@@ -499,25 +589,23 @@ void gotoXY(double x, double y) {
     refreshWorld();
 }
 
-double randBetween(double start,double end){
+double randBetween(double start,double end)
+{
     return (end-start)*randomf()+start;
 }
 
-void wait() {
+void wait()
+{
     myworld.frame_count=0;
     prepareTurtleIcon();
     displayWorld();
     pause();
 }
 
-void setOrigin(int x, int y) {
+void setOrigin(int x, int y)
+{
     myworld.origin_x=myworld.origin_x+x;
     myworld.origin_y=myworld.origin_y-y;
     home();
     clearScreen();
 }
-
-
-
-
-

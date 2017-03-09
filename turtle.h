@@ -6,7 +6,8 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
     double x;
     double y;
     double angle;
