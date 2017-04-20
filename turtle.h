@@ -49,7 +49,6 @@ TurtleState getState();
 void setState(TurtleState state);
 void faceXY(double x,double y);
 double randBetween(double start,double end);
-void wait();
 void setOrigin(int x, int y);
 
 #ifdef __cplusplus
