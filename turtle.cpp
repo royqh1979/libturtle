@@ -58,15 +58,15 @@ static void displayWorld()
     if (myturtle.is_show)
     {
     	putimage_rotatetransparent(screenImage,
-                             myturtle.icon,
-                             myturtle.x,myturtle.y,
-                             0,0,
-                             myturtle.icon_width,
-                             myturtle.icon_height,
-                             myturtle.icon_width/2,
-                             myturtle.icon_height/2,
-                             WHITE,
-							 (myturtle.orient+90)/180*PI);
+            myturtle.icon,
+            myturtle.x*myworld.scale,myturtle.y*myworld.scale,
+            0,0,
+            myturtle.icon_width,
+            myturtle.icon_height,
+            myturtle.icon_width/2,
+            myturtle.icon_height/2,
+            WHITE,
+			(myturtle.orient+90)/180*PI);
     }
     putimage(0,0,screenImage);
 }
@@ -83,7 +83,7 @@ static void refreshWorld()
             return;
         }
         delay_ms(10);
-    }
+    } 
     else
     {
         delay_ms(1000/myturtle.pen_speed);
@@ -225,57 +225,80 @@ void forward(double step)
         delta_y=-delta_y;
         step=-step;
     }
-    old_x=x=myturtle.x;
-    old_y=y=myturtle.y;
 
-    for (int i=0; i<step; i++)
-    {
-        if ((i+1)<step)
-        {
-            x+=delta_x;
-            y+=delta_y;
-        }
-        else
-        {
-            x+=(step-i)*delta_x;
-            y+=(step-i)*delta_y;
-        }
-
-        if (myworld.rewind)
-        {
-            if (x<0)
-            {
-                x+=myworld.width;
-                old_x+=myworld.width;
-            }
-            else if (x>myworld.width)
-            {
-                x-=myworld.width;
-                old_x-=myworld.width;
-            }
-            if (y<0)
-            {
-                y+=myworld.height;
-                old_y+=myworld.height;
-            }
-            else if (y>myworld.height)
-            {
-                y-=myworld.height;
-                old_y-=myworld.height;
-            }
-        }
-        if (myturtle.is_pen_down)
-        {
-            line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
-        }
-        old_x=x;
-        old_y=y;
-        myturtle.x=x;
-        myturtle.y=y;
-        refreshWorld();
-
-    }
-
+   	if (!myworld.immediate) {
+    	old_x=x=myturtle.x;
+    	old_y=y=myturtle.y;
+	    for (int i=0; i<step; i++)
+	    {
+	        if ((i+1)<step)
+	        {
+	            x+=delta_x;
+	            y+=delta_y;
+	        }
+	        else
+	        {
+	            x+=(step-i)*delta_x;
+	            y+=(step-i)*delta_y;
+	        }
+	
+	        if (myworld.rewind)
+	        {
+	            if (x<0)
+	            {
+	                x+=myworld.width;
+	                old_x+=myworld.width;
+	            }
+	            else if (x>myworld.width)
+	            {
+	                x-=myworld.width;
+	                old_x-=myworld.width;
+	            }
+	            if (y<0)
+	            {
+	                y+=myworld.height;
+	                old_y+=myworld.height;
+	            }
+	            else if (y>myworld.height)
+	            {
+	                y-=myworld.height;
+	                old_y-=myworld.height;
+	            }
+	        }
+	        if (myturtle.is_pen_down)
+	        {
+	            line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
+	        }
+	        old_x=x;
+	        old_y=y;
+	        myturtle.x=x;
+	        myturtle.y=y;
+	       	refreshWorld();
+	    }
+   	} else {
+   		x=myturtle.x+step*delta_x;
+   		y=myturtle.y+step*delta_y;
+	    if (myworld.rewind) { 
+	    	while (x<0) {
+				x+=myworld.width;
+			}
+			while (x>myworld.width) {
+				x-=myworld.width;
+			}
+	    	while (y<0) {
+				y+=myworld.height;
+			}
+			while (y>myworld.height) {
+				y-=myworld.height;
+			}
+	    }
+	    if (myturtle.is_pen_down) {
+	    	line(round(myturtle.x*myworld.scale),round(myturtle.y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
+	    }
+	    myturtle.x=x;
+	    myturtle.y=y;
+   	}
+	refreshWorld();   	
 }
 void bk(double step)
 {

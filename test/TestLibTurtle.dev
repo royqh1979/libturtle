@@ -11,7 +11,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=-lgraphics -lgdi32 -limm32 -lmsimg32 -lole32 -loleaut32 -lwinmm -lm -luuid -mwindows --static_@@__@@_
+Linker=-lgraphics -lgdiplus -lgdi32 -limm32 -lmsimg32 -lole32 -loleaut32 -lwinmm -lm -luuid -mwindows --static_@@__@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -27,8 +27,8 @@ UseCustomMakefile=0
 CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
-CompilerSet=0
-CompilerSettings=0000000000000000000000000
+CompilerSet=1
+CompilerSettings=0000000000110010000001000
 UnitCount=3
 
 [VersionInfo]
@@ -59,6 +59,7 @@ Link=1
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
+UseUTF8=1
 
 [Unit2]
 FileName=..\turtle.h
@@ -69,6 +70,7 @@ Link=1
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
+UseUTF8=1
 
 [Unit3]
 FileName=..\turtle.cpp
@@ -79,4 +81,5 @@ Link=1
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
+UseUTF8=1
 
