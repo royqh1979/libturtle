@@ -1,5 +1,7 @@
 #include "turtle.h"
 #include <math.h>
+#include <string.h> 
+#include <stdio.h>
 
 #ifndef BOOL
 typedef int BOOL;
@@ -37,7 +39,20 @@ typedef struct
     int back_color;
     BOOL rewind;
     BOOL immediate;
+    PIMAGE cord_image; 
     PIMAGE world_image;
+    PIMAGE back_image;
+    BOOL show_cord;
+    color_t cord_x_color;
+    color_t cord_y_color;
+    int cord_x_line_width;
+    int cord_y_line_width;
+    int cord_x_grid_width;
+    int cord_y_grid_width;
+    int cord_x_font_size;
+    int cord_y_font_size;
+    color_t cord_x_font_color;
+    color_t cord_y_font_color;
     int origin_x;
     int origin_y;
     int frame_count;
@@ -52,9 +67,13 @@ static double d2a(double degree)
 
 static PIMAGE screenImage;
 
-static void displayWorld()
+static void displayWorld(void)
 {
-    putimage(screenImage,0,0,myworld.world_image);
+	putimage(screenImage, 0,0,myworld.back_image);
+	if (myworld.show_cord) {
+		putimage_withalpha(screenImage,myworld.cord_image,0,0);
+	}
+    putimage_withalpha(screenImage,myworld.world_image,0,0);
     if (myturtle.is_show)
     {
     	putimage_rotatetransparent(screenImage,
@@ -71,7 +90,7 @@ static void displayWorld()
     putimage(0,0,screenImage);
 }
 
-static void refreshWorld()
+static void refreshWorld(void)
 {
     myworld.frame_count++;
     myworld.frame_count%=myturtle.pen_speed;
@@ -89,6 +108,58 @@ static void refreshWorld()
         delay_ms(1000/myturtle.pen_speed);
     }
     displayWorld();
+}
+
+static void UpdateCord(void){
+	char msg[100];
+	int cx,cy,width,height;
+	int i;
+	width=getwidth(myworld.cord_image);
+	height=getheight(myworld.cord_image);
+	cx = width / 2;
+	cy =  height / 2;
+	cleardevice(myworld.cord_image);
+	setbkcolor(EGERGBA(0,0,0,0),myworld.cord_image);
+	setfontbkcolor(EGERGBA(0,0,0,0),myworld.cord_image);
+	setlinestyle(CENTER_LINE,0,1,myworld.cord_image);
+	// draw vertical grid lines ( y lines)
+	setlinewidth(myworld.cord_y_line_width);
+	setfont(myworld.cord_y_font_size,myworld.cord_y_font_size,"Sans Serif",myworld.cord_image);
+	i=0;
+	while (TRUE) {
+		if ((cx+i>=width) || (cx-i<0)) {
+			break;
+		}
+		setcolor(EGEACOLOR(255,myworld.cord_y_color),myworld.cord_image);
+		ege_line(cx+i,0,cx+i,height,myworld.cord_image);
+		ege_line(cx-i,0,cx-i,height,myworld.cord_image);
+		setcolor(EGEACOLOR(255,myworld.cord_y_font_color),myworld.cord_image);
+		sprintf(msg,"%d",i);
+		ege_drawtext(msg,cx+i+myworld.cord_y_line_width+2,myworld.cord_x_line_width+2,myworld.cord_image);
+		sprintf(msg,"%d",-i);
+		ege_drawtext(msg,cx-i+myworld.cord_y_line_width+2,myworld.cord_x_line_width+2,myworld.cord_image);
+		i+=myworld.cord_y_grid_width;		
+	}
+	// draw horizontal grid lines ( x lines)
+	setlinewidth(myworld.cord_x_line_width);
+	setfont(myworld.cord_x_font_size,myworld.cord_x_font_size,"Sans Serif",myworld.cord_image);
+	i=0;
+	while (TRUE) {
+		if ((cy+i>=width) || (cy-i<0)) {
+			break;
+		}
+		setcolor(EGEACOLOR(255,myworld.cord_x_color),myworld.cord_image);
+		ege_line(0,cy+i,width,cy+i,myworld.cord_image);
+		ege_line(0,cy-i,width,cy-i,myworld.cord_image);
+		setcolor(EGEACOLOR(255,myworld.cord_x_font_color),myworld.cord_image);
+		sprintf(msg,"%d",i);
+		ege_drawtext(msg,myworld.cord_y_line_width+2,cy+i+myworld.cord_x_line_width+2,myworld.cord_image);
+		sprintf(msg,"%d",-i);
+		ege_drawtext(msg,myworld.cord_y_line_width+2,cy-i+myworld.cord_x_line_width+2,myworld.cord_image);
+		i+=myworld.cord_x_grid_width;		
+	}
+
+	
 }
 
 static void prepareTurtleOriginIcon()
@@ -179,14 +250,31 @@ void initWorld(int width,int height,double scale)
     myworld.immediate=FALSE;
     myworld.scale=scale;
     myworld.world_image=newimage(width*scale,height*scale);
+    myworld.cord_image=newimage(width*scale,height*scale);
+    myworld.back_image=newimage(width*scale,height*scale);
     myworld.frame_count=0;
     myworld.origin_x=width/2;
     myworld.origin_y=height/2;
-    setcolor(myturtle.pen_color,myworld.world_image);
-    setbkcolor(myworld.back_color, myworld.world_image);
+    myworld.show_cord=TRUE;
+    myworld.cord_x_color=LIGHTGRAY;
+    myworld.cord_y_color=LIGHTGRAY;
+    myworld.cord_x_line_width=1;
+    myworld.cord_y_line_width=1;
+    myworld.cord_x_grid_width=100;
+    myworld.cord_y_grid_width=100;
+    myworld.cord_x_font_color=RED;
+    myworld.cord_y_font_color=RED; 
+    myworld.cord_x_font_size=12;
+    myworld.cord_y_font_size=12; 
+    setbkcolor(myworld.back_color,myworld.back_image); 
+    cleardevice(myworld.back_image);
+    setcolor(EGEACOLOR(255,myturtle.pen_color),myworld.world_image);
+    setbkcolor(EGERGBA(0,0,0,0), myworld.world_image);
     setfillcolor(myturtle.pen_color, myworld.world_image);
     setlinewidth(myturtle.pen_size, myworld.world_image);
     cleardevice(myworld.world_image);
+    
+    setbkcolor(EGERGBA(0,0,0,0),myworld.cord_image);
 
     myturtle.x=myworld.origin_x;
     myturtle.y=myworld.origin_y;
@@ -202,6 +290,7 @@ void initWorld(int width,int height,double scale)
     screenImage=newimage(width*scale,height*scale);
 
     setrendermode(RENDER_MANUAL);
+    UpdateCord(); 
     //prepareTurtleIcon();
 
     refreshWorld();
@@ -266,7 +355,7 @@ void forward(double step)
         }
         if (myturtle.is_pen_down)
         {
-            line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
+            ege_line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
         }
         old_x=x;
         old_y=y;
@@ -395,7 +484,7 @@ void setPenSize(int size)
 void setPenColor(color_t color)
 {
     myturtle.pen_color=color;
-    setcolor(color,myworld.world_image);
+    setcolor(EGEACOLOR(255,color),myworld.world_image);
 }
 void setSpeed(int speed)
 {
