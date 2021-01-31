@@ -29,6 +29,8 @@ typedef struct
     BOOL rewind;
     BOOL immediate;
     PIMAGE world_image;
+    PIMAGE background_image;
+    PIMAGE default_background;
     int origin_x;
     int origin_y;
     int frame_count;
@@ -45,7 +47,10 @@ static PIMAGE screenImage;
 
 static void displayWorld()
 {
-    putimage(screenImage,0,0,myworld.world_image);
+	if (myworld.background_image != NULL) {
+    	putimage(screenImage,0,0,myworld.background_image);
+	}
+    putimage_withalpha(screenImage,myworld.world_image,0,0);
     if (myturtle.is_show)
     {
     	putimage_rotatetransparent(screenImage,
@@ -180,10 +185,16 @@ void initWorld(int width,int height,double scale)
     myworld.origin_x=width/2;
     myworld.origin_y=height/2;
     setcolor(myturtle.pen_color,myworld.world_image);
-    setbkcolor(myworld.back_color, myworld.world_image);
+    setbkcolor(EGERGBA(0,0,0,0), myworld.world_image);
+    //setbkcolor(myworld.back_color, myworld.world_image);
     setfillcolor(myturtle.pen_color, myworld.world_image);
     setlinewidth(myturtle.pen_size, myworld.world_image);
     cleardevice(myworld.world_image);
+    
+    myworld.default_background=newimage(width*scale,height*scale);
+    setbkcolor(myworld.back_color, myworld.default_background);
+    cleardevice(myworld.default_background);
+    myworld.background_image = myworld.default_background; 
 
     myturtle.x=myworld.origin_x;
     myturtle.y=myworld.origin_y;
@@ -197,7 +208,7 @@ void initWorld(int width,int height,double scale)
     prepareTurtleOriginIcon();
 
     screenImage=newimage(width*scale,height*scale);
-
+	
 
     setrendermode(RENDER_MANUAL);
     
@@ -266,7 +277,7 @@ void forward(double step)
 	        }
 	        if (myturtle.is_pen_down)
 	        {
-	            line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
+	            ege_line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
 	        }
 	        old_x=x;
 	        old_y=y;
@@ -292,7 +303,7 @@ void forward(double step)
 			}
 	    }
 	    if (myturtle.is_pen_down) {
-	    	line(round(myturtle.x*myworld.scale),round(myturtle.y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
+	    	ege_line(round(myturtle.x*myworld.scale),round(myturtle.y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
 	    }
 	    myturtle.x=x;
 	    myturtle.y=y;
@@ -400,7 +411,7 @@ void home()
     to_y=myworld.origin_y;
     if (myturtle.is_pen_down)
     {
-        line(myturtle.x*myworld.scale,myturtle.y*myworld.scale,to_x*myworld.scale,to_y*myworld.scale,myworld.world_image);
+        ege_line(myturtle.x*myworld.scale,myturtle.y*myworld.scale,to_x*myworld.scale,to_y*myworld.scale,myworld.world_image);
     }
     myturtle.x=to_x;
     myturtle.y=to_y;
@@ -557,6 +568,22 @@ void setOrigin(int x, int y)
 }
 
 
-void setCaption(const char* title){
+void setCaption(const char* title)
+{
     setcaption(title);
+}
+
+void setBackgroundImage(PIMAGE backImg)
+{
+	if (backImg == NULL) {
+		myworld.background_image = myworld.default_background;			
+	} else {
+		myworld.background_image = backImg;			
+	}
+}
+
+void setBackgroundColor(ege::color_t color)
+{
+	myworld.back_color = color;
+	setbkcolor(color,myworld.default_background);
 }

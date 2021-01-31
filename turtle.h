@@ -61,6 +61,8 @@ void faceXY(double x,double y);
 double randBetween(double start,double end);
 void setOrigin(int x, int y);
 void setCaption(const char* title);
+void setBackgroundImage(PIMAGE backImg);
+void setBackgroundColor(ege::color_t color);
 
 #ifdef __cplusplus
 }
