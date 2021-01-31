@@ -2,6 +2,16 @@
 #define TURTLE_WORLD_H 1
 #include <graphics.h>
 
+#ifndef BOOL
+typedef int BOOL;
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,7 +41,7 @@ void clear();
 void clearScreen();
 void home();
 void setPenSize(int size);
-void setPenColor(color_t color);
+void setPenColor(ege::color_t color);
 void setSpeed(int speed);
 void setRewind(int isRewind);
 void setImmediate(int isImmediate);
@@ -50,6 +60,7 @@ void setState(TurtleState state);
 void faceXY(double x,double y);
 double randBetween(double start,double end);
 void setOrigin(int x, int y);
+void setCaption(const char* title);
 
 #ifdef __cplusplus
 }

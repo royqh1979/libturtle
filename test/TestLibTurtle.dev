@@ -28,8 +28,11 @@ CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=1
-CompilerSettings=0000000000110010000001000
+CompilerSettings=0000000000110000000001000
 UnitCount=3
+UsePrecompiledHeader=0
+PrecompiledHeader=
+UseUTF8=0
 
 [VersionInfo]
 Major=1
@@ -60,6 +63,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 UseUTF8=1
+DetectEncoding=0
+Encoding=0
 
 [Unit2]
 FileName=..\turtle.h
@@ -71,6 +76,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 UseUTF8=1
+DetectEncoding=0
+Encoding=0
 
 [Unit3]
 FileName=..\turtle.cpp
@@ -82,4 +89,6 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 UseUTF8=1
+DetectEncoding=0
+Encoding=0
 

@@ -1,18 +1,9 @@
 #include "turtle.h"
+
 #include <math.h>
 
-#ifndef BOOL
-typedef int BOOL;
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
-
 #define BASE_STEP 1
-
+using namespace ege;
 
 typedef struct
 {
@@ -68,7 +59,13 @@ static void displayWorld()
             WHITE,
 			(myturtle.orient+90)/180*PI);
     }
-    putimage(0,0,screenImage);
+
+    ege::settarget(NULL);
+	    
+	putimage(0,0,screenImage);
+
+    ege::settarget(myworld.world_image);
+
 }
 
 static void refreshWorld()
@@ -170,7 +167,7 @@ static void prepareTurtleOriginIcon()
 
 void initWorld(int width,int height,double scale)
 {
-    initgraph(width*scale,height*scale);
+    ege::initgraph(width*scale,height*scale);
 
     myworld.width=width;
     myworld.height=height;
@@ -201,8 +198,10 @@ void initWorld(int width,int height,double scale)
 
     screenImage=newimage(width*scale,height*scale);
 
+
     setrendermode(RENDER_MANUAL);
-    //prepareTurtleIcon();
+    
+    settarget(myworld.world_image);
 
     refreshWorld();
 }
@@ -555,4 +554,9 @@ void setOrigin(int x, int y)
     myworld.origin_y=myworld.origin_y-y;
     home();
     clearScreen();
+}
+
+
+void setCaption(const char* title){
+    setcaption(title);
 }
