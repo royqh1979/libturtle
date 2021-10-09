@@ -1,6 +1,7 @@
 #include "turtle.h"
 
 #include <math.h>
+#include <queue>
 
 #define BASE_STEP 1
 using namespace ege;
@@ -65,11 +66,7 @@ static void displayWorld()
 			(myturtle.orient+90)/180*PI);
     }
 
-    ege::settarget(NULL);
-	    
 	putimage(0,0,screenImage);
-
-    ege::settarget(myworld.world_image);
 
 }
 
@@ -173,6 +170,7 @@ static void prepareTurtleOriginIcon()
 void initWorld(int width,int height,double scale)
 {
     ege::initgraph(width*scale,height*scale);
+    randomize();
 
     myworld.width=width;
     myworld.height=height;
@@ -184,7 +182,6 @@ void initWorld(int width,int height,double scale)
     myworld.frame_count=0;
     myworld.origin_x=width/2;
     myworld.origin_y=height/2;
-    setcolor(myturtle.pen_color,myworld.world_image);
     setbkcolor(EGERGBA(0,0,0,0), myworld.world_image);
     //setbkcolor(myworld.back_color, myworld.world_image);
     setfillcolor(myturtle.pen_color, myworld.world_image);
@@ -206,14 +203,13 @@ void initWorld(int width,int height,double scale)
     myturtle.icon=NULL;
     myturtle.is_show=TRUE;
     prepareTurtleOriginIcon();
+    
+    setcolor(myturtle.pen_color,myworld.world_image);
 
     screenImage=newimage(width*scale,height*scale);
-	
 
     setrendermode(RENDER_MANUAL);
     
-    settarget(myworld.world_image);
-
     refreshWorld();
 }
 
@@ -586,4 +582,39 @@ void setBackgroundColor(ege::color_t color)
 {
 	myworld.back_color = color;
 	setbkcolor(color,myworld.default_background);
+}
+
+void fill() {
+    int x = round(myturtle.x*myworld.scale);
+    int y = round(myturtle.y*myworld.scale);
+    int w = myworld.width * myworld.scale;
+    int h = myworld.height * myworld.scale;
+    color_t* buffer = getbuffer(myworld.world_image);
+	color_t c=buffer[y*w+x]; 
+	std::queue<int> points_x;
+	std::queue<int> points_y;
+	points_x.push(x);
+	points_y.push(y);
+	while (!points_x.empty()) {
+		int t_x = points_x.front();
+		int t_y = points_y.front();
+		points_x.pop();
+		points_y.pop();
+		if (t_x<0 || t_x >= w) 
+			continue;
+		if (t_y<0 || t_y >= h)
+			continue;
+		if (buffer[t_y*w+t_x]!=c) {
+			continue;
+		}
+		buffer[t_y*w+t_x] = myturtle.pen_color;
+		points_x.push(t_x-1);
+		points_y.push(t_y);
+		points_x.push(t_x+1);
+		points_y.push(t_y);
+		points_x.push(t_x);
+		points_y.push(t_y-1);
+		points_x.push(t_x);
+		points_y.push(t_y+1);
+	}
 }

@@ -1,6 +1,6 @@
 #ifndef TURTLE_WORLD_H
 #define TURTLE_WORLD_H 1
-#include <graphics.h>
+#include <ege.h>
 
 #ifndef BOOL
 typedef int BOOL;
@@ -12,9 +12,27 @@ typedef int BOOL;
 #define FALSE 0
 #endif
 
-#ifdef __cplusplus
-extern "C" {
+#ifndef PIMAGE
+using ege::PIMAGE;
+using ege::BLACK;
+using ege::BLUE;
+using ege::GREEN;
+using ege::CYAN;
+using ege::RED;
+using ege::MAGENTA;
+using ege::BROWN;
+using ege::LIGHTGRAY;
+using ege::DARKGRAY;
+using ege::LIGHTBLUE;
+using ege::LIGHTGREEN;
+using ege::LIGHTCYAN;
+using ege::LIGHTRED;
+using ege::LIGHTMAGENTA;
+using ege::YELLOW;
+using ege::WHITE;
+using ege::color_t;
 #endif
+ 
 
 typedef struct
 {
@@ -63,9 +81,6 @@ void setOrigin(int x, int y);
 void setCaption(const char* title);
 void setBackgroundImage(PIMAGE backImg);
 void setBackgroundColor(ege::color_t color);
-
-#ifdef __cplusplus
-}
-#endif
+void fill();
 
 #endif
