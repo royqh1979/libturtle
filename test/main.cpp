@@ -9,6 +9,7 @@ int main() {
 //    setcolor(RED,back);
 //    circle(400,300,200,back);
     //setBackgroundImage(back);
+	setBackgroundColor(GREEN);
     //setbkcolor(WHITE);
     setSpeed(200);
     //setImmediate(TRUE);
@@ -23,7 +24,7 @@ int main() {
     fd(50);
     setPenColor(RED);
     fill();
-	 
+
     pause();
     hide();
     pause();

@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <queue>
+#include <memory>
 
 #define BASE_STEP 1
 using namespace ege;
@@ -82,7 +83,7 @@ static void refreshWorld()
             return;
         }
         delay_ms(10);
-    } 
+    }
     else
     {
         delay_ms(1000/myturtle.pen_speed);
@@ -187,11 +188,11 @@ void initWorld(int width,int height,double scale)
     setfillcolor(myturtle.pen_color, myworld.world_image);
     setlinewidth(myturtle.pen_size, myworld.world_image);
     cleardevice(myworld.world_image);
-    
+
     myworld.default_background=newimage(width*scale,height*scale);
     setbkcolor(myworld.back_color, myworld.default_background);
     cleardevice(myworld.default_background);
-    myworld.background_image = myworld.default_background; 
+    myworld.background_image = myworld.default_background;
 
     myturtle.x=myworld.origin_x;
     myturtle.y=myworld.origin_y;
@@ -203,13 +204,13 @@ void initWorld(int width,int height,double scale)
     myturtle.icon=NULL;
     myturtle.is_show=TRUE;
     prepareTurtleOriginIcon();
-    
+
     setcolor(myturtle.pen_color,myworld.world_image);
 
     screenImage=newimage(width*scale,height*scale);
 
     setrendermode(RENDER_MANUAL);
-    
+
     refreshWorld();
 }
 
@@ -247,7 +248,7 @@ void forward(double step)
 	            x+=(step-i)*delta_x;
 	            y+=(step-i)*delta_y;
 	        }
-	
+
 	        if (myworld.rewind)
 	        {
 	            if (x<0)
@@ -284,7 +285,7 @@ void forward(double step)
    	} else {
    		x=myturtle.x+step*delta_x;
    		y=myturtle.y+step*delta_y;
-	    if (myworld.rewind) { 
+	    if (myworld.rewind) {
 	    	while (x<0) {
 				x+=myworld.width;
 			}
@@ -304,7 +305,7 @@ void forward(double step)
 	    myturtle.x=x;
 	    myturtle.y=y;
    	}
-	refreshWorld();   	
+	refreshWorld();
 }
 void bk(double step)
 {
@@ -572,11 +573,30 @@ void setCaption(const char* title)
 void setBackgroundImage(PIMAGE backImg)
 {
 	if (backImg == NULL) {
-		myworld.background_image = myworld.default_background;			
+		myworld.background_image = myworld.default_background;
 	} else {
-		myworld.background_image = backImg;			
+		myworld.background_image = backImg;
 	}
 }
+
+int setBackgroundImage(const char* filename) {
+	ege::PIMAGE img = ege::newimage();
+	int result = ege::getimage(img,filename);
+	if (result!=ege::grOk) 
+		return result;
+	setBackgroundImage(img);
+	return result;
+}
+
+int setBackgroundImage(const wchar_t* filename) {
+	ege::PIMAGE img = ege::newimage();
+	int result = ege::getimage(img,filename);
+	if (result!=ege::grOk) 
+		return result;
+	setBackgroundImage(img);
+	return result;
+}
+
 
 void setBackgroundColor(ege::color_t color)
 {
@@ -590,7 +610,7 @@ void fill() {
     int w = myworld.width * myworld.scale;
     int h = myworld.height * myworld.scale;
     color_t* buffer = getbuffer(myworld.world_image);
-	color_t c=buffer[y*w+x]; 
+	color_t c=buffer[y*w+x];
 	std::queue<int> points_x;
 	std::queue<int> points_y;
 	points_x.push(x);
@@ -600,7 +620,7 @@ void fill() {
 		int t_y = points_y.front();
 		points_x.pop();
 		points_y.pop();
-		if (t_x<0 || t_x >= w) 
+		if (t_x<0 || t_x >= w)
 			continue;
 		if (t_y<0 || t_y >= h)
 			continue;
