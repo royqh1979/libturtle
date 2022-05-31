@@ -1,640 +1,723 @@
 #include "turtle.h"
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <math.h>
 #include <queue>
-#include <memory>
 
 #define BASE_STEP 1
-using namespace ege;
+
+    #define COLOR_EQUAL(col1, col2) ((col1.r == col2.r) && (col1.g == col2.g) && (col1.b == col2.b) && (col1.a == col2.a))
 
 typedef struct
 {
-    double x;
-    double y;
-    double orient; //Í·Ö¸Ïò½Ç¶È
-    BOOL is_pen_down;
-    color_t pen_color;
-    int pen_size;
-    int pen_speed;
-    PIMAGE icon;
-    double icon_width;
-    double icon_height;
-    BOOL is_show; //ÊÇ·ñÏÔÊ¾º£¹ê
+	double x;
+	double y;
+	double orient; //Í·Ö¸Ïò½Ç¶È
+	bool is_pen_down;
+	Color pen_color;
+	int pen_size;
+	int move_speed;
+	Texture2D icon;
+	double icon_width;
+	double icon_height;
+	bool is_show; //ÊÇ·ñÏÔÊ¾º£¹ê
 } Turtle;
 
 typedef struct
 {
-    int width;
-    int height;
-    double scale;
-    int back_color;
-    BOOL rewind;
-    BOOL immediate;
-    PIMAGE world_image;
-    PIMAGE background_image;
-    PIMAGE default_background;
-    int origin_x;
-    int origin_y;
-    int frame_count;
+	int width;
+	int height;
+	double scale;
+	Color back_color;
+	bool is_rewind;
+	bool is_immediate;
+	Image world_image;
+	Texture2D background;
+	bool use_background_image;
+	int origin_x;
+	int origin_y;
+	int frame_count;
+	bool window_should_close;
 } World;
 
-static Turtle myturtle;
-static World myworld;
+static World* pWorld = NULL;
+static Turtle* pTurtle = NULL;
+
 static double d2a(double degree)
 {
-    return degree*M_PI/180.0;
+	return degree*M_PI/180.0;
 }
 
-static PIMAGE screenImage;
 
-static void displayWorld()
-{
-	if (myworld.background_image != NULL) {
-    	putimage(screenImage,0,0,myworld.background_image);
+static void displayWorld() {
+	if (WindowShouldClose()) {
+		pWorld->window_should_close = true;
 	}
-    putimage_withalpha(screenImage,myworld.world_image,0,0);
-    if (myturtle.is_show)
-    {
-    	putimage_rotatetransparent(screenImage,
-            myturtle.icon,
-            myturtle.x*myworld.scale,myturtle.y*myworld.scale,
-            0,0,
-            myturtle.icon_width,
-            myturtle.icon_height,
-            myturtle.icon_width/2,
-            myturtle.icon_height/2,
-            WHITE,
-			(myturtle.orient+90)/180*PI);
-    }
-
-	putimage(0,0,screenImage);
-
+	Texture2D world_texture = LoadTextureFromImage(pWorld->world_image);
+	
+	BeginDrawing();
+	ClearBackground(pWorld->back_color);
+	DrawTexture(world_texture,0,0,pWorld->back_color);	
+	if (pTurtle->is_show) {
+		Vector2 pos;
+		pos.x=pTurtle->x-(pTurtle->icon_width*sqrt(2)/2)*cos(d2a(pTurtle->orient+90+45));
+		pos.y=pTurtle->y-(pTurtle->icon_height*sqrt(2)/2)*sin(d2a(pTurtle->orient+90+45));
+		DrawTextureEx(pTurtle->icon,pos,pTurtle->orient+90,1,pWorld->back_color);
+	}
+	EndDrawing();
+	UnloadTexture(world_texture);
 }
+
 
 static void refreshWorld()
 {
-    myworld.frame_count++;
-    myworld.frame_count%=myturtle.pen_speed;
-    if (myturtle.pen_speed>100)
-    {
-        int s=myturtle.pen_speed/100;
-        if (myworld.frame_count%s!=1)
-        {
-            return;
-        }
-        delay_ms(10);
-    }
-    else
-    {
-        delay_ms(1000/myturtle.pen_speed);
-    }
-    displayWorld();
+	pWorld->frame_count++;
+	pWorld->frame_count%=pTurtle->move_speed;
+	if (pTurtle->move_speed>100)
+	{
+		int s=pTurtle->move_speed/100;
+		if (pWorld->frame_count%s!=1)
+		{
+			return; //skip frame
+		}
+		usleep(10);
+	}
+	else
+	{
+		usleep(1000/pTurtle->move_speed);
+	}
+	displayWorld();
 }
 
 static void prepareTurtleOriginIcon()
 {
-    int width,height;
-    width=10;
-    height=10;
-    myturtle.icon=newimage(width,height);
-    myturtle.icon_width=width;
-    myturtle.icon_height=height;
-
-
-    setbkcolor(WHITE,myturtle.icon);
-    setfillcolor(BLACK,myturtle.icon);
-    cleardevice(myturtle.icon);
-
-    putpixel(4,0,LIGHTRED,myturtle.icon);
-    putpixel(5,0,LIGHTRED,myturtle.icon);
-    putpixel(3,1,LIGHTRED,myturtle.icon);
-    putpixel(4,1,LIGHTRED,myturtle.icon);
-    putpixel(5,1,LIGHTRED,myturtle.icon);
-    putpixel(6,1,LIGHTRED,myturtle.icon);
-    putpixel(4,2,LIGHTRED,myturtle.icon);
-    putpixel(5,2,LIGHTRED,myturtle.icon);
-
-    //»­¹ê±³ÂÖÀª
-    putpixel(4,3,RED, myturtle.icon);
-    putpixel(5,3,RED, myturtle.icon);
-    putpixel(3,4,RED, myturtle.icon);
-    putpixel(6,4,RED, myturtle.icon);
-    putpixel(2,5,RED, myturtle.icon);
-    putpixel(7,5,RED, myturtle.icon);
-    putpixel(2,6,RED, myturtle.icon);
-    putpixel(7,6,RED, myturtle.icon);
-    putpixel(3,7,RED, myturtle.icon);
-    putpixel(6,7,RED, myturtle.icon);
-    putpixel(4,8,RED, myturtle.icon);
-    putpixel(5,8,RED, myturtle.icon);
-
-    //Ìî³ä¹ê±³
-    putpixel(4,4,DARKGRAY, myturtle.icon);
-    putpixel(5,4,DARKGRAY, myturtle.icon);
-    putpixel(3,5,DARKGRAY, myturtle.icon);
-    putpixel(4,5,DARKGRAY, myturtle.icon);
-    putpixel(5,5,DARKGRAY, myturtle.icon);
-    putpixel(6,5,DARKGRAY, myturtle.icon);
-    putpixel(3,6,DARKGRAY, myturtle.icon);
-    putpixel(4,6,DARKGRAY, myturtle.icon);
-    putpixel(5,6,DARKGRAY, myturtle.icon);
-    putpixel(6,6,DARKGRAY, myturtle.icon);
-    putpixel(4,7,DARKGRAY, myturtle.icon);
-    putpixel(5,7,DARKGRAY, myturtle.icon);
-
-    //»æÖÆËÄÖ«
-    putpixel(1,3,LIGHTRED,myturtle.icon);
-    putpixel(1,4,LIGHTRED,myturtle.icon);
-    putpixel(2,3,LIGHTRED,myturtle.icon);
-    putpixel(2,4,LIGHTRED,myturtle.icon);
-
-    putpixel(7,3,LIGHTRED,myturtle.icon);
-    putpixel(7,4,LIGHTRED,myturtle.icon);
-    putpixel(8,3,LIGHTRED,myturtle.icon);
-    putpixel(8,4,LIGHTRED,myturtle.icon);
-
-    putpixel(1,7,LIGHTRED,myturtle.icon);
-    putpixel(1,8,LIGHTRED,myturtle.icon);
-    putpixel(2,7,LIGHTRED,myturtle.icon);
-    putpixel(2,8,LIGHTRED,myturtle.icon);
-
-    putpixel(7,7,LIGHTRED,myturtle.icon);
-    putpixel(7,8,LIGHTRED,myturtle.icon);
-    putpixel(8,7,LIGHTRED,myturtle.icon);
-    putpixel(8,8,LIGHTRED,myturtle.icon);
-
-    //»æÖÆÎ²°Í
-    putpixel(4,9,LIGHTRED,myturtle.icon);
-    putpixel(5,9,LIGHTRED,myturtle.icon);
+	int width,height;
+	width=10;
+	height=10;
+	Image icon = GenImageColor(width,height,BLANK);
+	
+	pTurtle->icon_width = width;
+	pTurtle->icon_height = height;
+	
+	ImageDrawPixel(&icon,4,0,LIGHTRED);
+	ImageDrawPixel(&icon,5,0,LIGHTRED);
+	ImageDrawPixel(&icon,3,1,LIGHTRED);
+	ImageDrawPixel(&icon,4,1,LIGHTRED);
+	ImageDrawPixel(&icon,5,1,LIGHTRED);
+	ImageDrawPixel(&icon,6,1,LIGHTRED);
+	ImageDrawPixel(&icon,4,2,LIGHTRED);
+	ImageDrawPixel(&icon,5,2,LIGHTRED);
+	
+	//»­¹ê±³ÂÖÀª
+	ImageDrawPixel(&icon,4,3,RED);
+	ImageDrawPixel(&icon,5,3,RED);
+	ImageDrawPixel(&icon,3,4,RED);
+	ImageDrawPixel(&icon,6,4,RED);
+	ImageDrawPixel(&icon,2,5,RED);
+	ImageDrawPixel(&icon,7,5,RED);
+	ImageDrawPixel(&icon,2,6,RED);
+	ImageDrawPixel(&icon,7,6,RED);
+	ImageDrawPixel(&icon,3,7,RED);
+	ImageDrawPixel(&icon,6,7,RED);
+	ImageDrawPixel(&icon,4,8,RED);
+	ImageDrawPixel(&icon,5,8,RED);
+	
+	//Ìî³ä¹ê±³
+	ImageDrawPixel(&icon,4,4,DARKGRAY);
+	ImageDrawPixel(&icon,5,4,DARKGRAY);
+	ImageDrawPixel(&icon,3,5,DARKGRAY);
+	ImageDrawPixel(&icon,4,5,DARKGRAY);
+	ImageDrawPixel(&icon,5,5,DARKGRAY);
+	ImageDrawPixel(&icon,6,5,DARKGRAY);
+	ImageDrawPixel(&icon,3,6,DARKGRAY);
+	ImageDrawPixel(&icon,4,6,DARKGRAY);
+	ImageDrawPixel(&icon,5,6,DARKGRAY);
+	ImageDrawPixel(&icon,6,6,DARKGRAY);
+	ImageDrawPixel(&icon,4,7,DARKGRAY);
+	ImageDrawPixel(&icon,5,7,DARKGRAY);
+	
+	//»æÖÆËÄÖ«
+	ImageDrawPixel(&icon,1,3,LIGHTRED);
+	ImageDrawPixel(&icon,1,4,LIGHTRED);
+	ImageDrawPixel(&icon,2,3,LIGHTRED);
+	ImageDrawPixel(&icon,2,4,LIGHTRED);
+	
+	ImageDrawPixel(&icon,7,3,LIGHTRED);
+	ImageDrawPixel(&icon,7,4,LIGHTRED);
+	ImageDrawPixel(&icon,8,3,LIGHTRED);
+	ImageDrawPixel(&icon,8,4,LIGHTRED);
+	
+	ImageDrawPixel(&icon,1,7,LIGHTRED);
+	ImageDrawPixel(&icon,1,8,LIGHTRED);
+	ImageDrawPixel(&icon,2,7,LIGHTRED);
+	ImageDrawPixel(&icon,2,8,LIGHTRED);
+	
+	ImageDrawPixel(&icon,7,7,LIGHTRED);
+	ImageDrawPixel(&icon,7,8,LIGHTRED);
+	ImageDrawPixel(&icon,8,7,LIGHTRED);
+	ImageDrawPixel(&icon,8,8,LIGHTRED);
+	
+	//»æÖÆÎ²°Í
+	ImageDrawPixel(&icon,4,9,LIGHTRED);
+	ImageDrawPixel(&icon,5,9,LIGHTRED);
+	pTurtle->icon = LoadTextureFromImage(icon);
+	UnloadImage(icon);
 }
 
-void initWorld(int width,int height,double scale)
-{
-    ege::initgraph(width*scale,height*scale);
-    randomize();
 
-    myworld.width=width;
-    myworld.height=height;
-    myworld.back_color=WHITE;
-    myworld.rewind=TRUE;
-    myworld.immediate=FALSE;
-    myworld.scale=scale;
-    myworld.world_image=newimage(width*scale,height*scale);
-    myworld.frame_count=0;
-    myworld.origin_x=width/2;
-    myworld.origin_y=height/2;
-    setbkcolor(EGERGBA(0,0,0,0), myworld.world_image);
-    //setbkcolor(myworld.back_color, myworld.world_image);
-    setfillcolor(myturtle.pen_color, myworld.world_image);
-    setlinewidth(myturtle.pen_size, myworld.world_image);
-    cleardevice(myworld.world_image);
-
-    myworld.default_background=newimage(width*scale,height*scale);
-    setbkcolor(myworld.back_color, myworld.default_background);
-    cleardevice(myworld.default_background);
-    myworld.background_image = myworld.default_background;
-
-    myturtle.x=myworld.origin_x;
-    myturtle.y=myworld.origin_y;
-    myturtle.orient=-90;
-    myturtle.is_pen_down=TRUE;
-    myturtle.pen_color=BLACK;
-    myturtle.pen_size=1;
-    myturtle.pen_speed=100;
-    myturtle.icon=NULL;
-    myturtle.is_show=TRUE;
-    prepareTurtleOriginIcon();
-
-    setcolor(myturtle.pen_color,myworld.world_image);
-
-    screenImage=newimage(width*scale,height*scale);
-
-    setrendermode(RENDER_MANUAL);
-
-    refreshWorld();
+void initWorld(int width,int height){
+	if (pWorld!=NULL)
+		return;
+	InitWindow(width,height,"Turtle World");
+	SetTargetFPS(30);
+	
+	pWorld = (World*)malloc(sizeof(World));
+	pWorld->width = width;
+	pWorld->height = height;
+	pWorld->scale = 1.0;
+	pWorld->back_color = WHITE;
+	pWorld->is_rewind = false;
+	pWorld->is_immediate = false;
+	pWorld->origin_x = width/2;
+	pWorld->origin_y = height/2;
+	pWorld->use_background_image = false;
+	pWorld->frame_count = 0;
+	pWorld->window_should_close=false;
+	
+	pTurtle=(Turtle*)malloc(sizeof(Turtle));
+	pTurtle->pen_size = 1;
+	pTurtle->pen_color = BLACK;
+	pTurtle->x=pWorld->origin_x;
+	pTurtle->y=pWorld->origin_y;
+	pTurtle->orient = -90;
+	pTurtle->move_speed = 100;
+	pTurtle->is_show = true;
+	pTurtle->is_pen_down = true;
+	prepareTurtleOriginIcon();
+	
+	pWorld->world_image = GenImageColor(width,height,BLANK);
 }
 
+void closeWorld(){
+	if (pWorld==NULL)
+		return;
+	//pWorld->is_exit=true; 
+	UnloadImage(pWorld->world_image);
+	if (pWorld->use_background_image) {
+		UnloadTexture(pWorld->background);
+	}
+	UnloadTexture(pTurtle->icon);
+	CloseWindow();
+	free(pWorld);
+}
+
+void pause() {
+	if (pWorld==NULL)
+		return;
+	while(!pWorld->window_should_close) {
+		displayWorld();
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+			break;
+	}
+}
 
 void fd(double step)
 {
-    forward(step);
+	forward(step);
 }
 
 void forward(double step)
 {
-    double delta_x,delta_y;
-    double x,y,old_x,old_y;
-    delta_x=BASE_STEP*cos(d2a(myturtle.orient));
-    delta_y=BASE_STEP*sin(d2a(myturtle.orient));
-    if (step<0)
-    {
-        delta_x=-delta_x;
-        delta_y=-delta_y;
-        step=-step;
-    }
-
-   	if (!myworld.immediate) {
-    	old_x=x=myturtle.x;
-    	old_y=y=myturtle.y;
-	    for (int i=0; i<step; i++)
-	    {
-	        if ((i+1)<step)
-	        {
-	            x+=delta_x;
-	            y+=delta_y;
-	        }
-	        else
-	        {
-	            x+=(step-i)*delta_x;
-	            y+=(step-i)*delta_y;
-	        }
-
-	        if (myworld.rewind)
-	        {
-	            if (x<0)
-	            {
-	                x+=myworld.width;
-	                old_x+=myworld.width;
-	            }
-	            else if (x>myworld.width)
-	            {
-	                x-=myworld.width;
-	                old_x-=myworld.width;
-	            }
-	            if (y<0)
-	            {
-	                y+=myworld.height;
-	                old_y+=myworld.height;
-	            }
-	            else if (y>myworld.height)
-	            {
-	                y-=myworld.height;
-	                old_y-=myworld.height;
-	            }
-	        }
-	        if (myturtle.is_pen_down)
-	        {
-	            ege_line(round(old_x*myworld.scale),round(old_y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
-	        }
-	        old_x=x;
-	        old_y=y;
-	        myturtle.x=x;
-	        myturtle.y=y;
-	       	refreshWorld();
-	    }
-   	} else {
-   		x=myturtle.x+step*delta_x;
-   		y=myturtle.y+step*delta_y;
-	    if (myworld.rewind) {
-	    	while (x<0) {
-				x+=myworld.width;
+	double delta_x,delta_y;
+	double x,y,old_x,old_y;
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	delta_x=BASE_STEP*cos(d2a(pTurtle->orient));
+	delta_y=BASE_STEP*sin(d2a(pTurtle->orient));
+	if (step<0)
+	{
+		delta_x=-delta_x;
+		delta_y=-delta_y;
+		step=-step;
+	}
+	
+	if (!pWorld->is_immediate) {
+		old_x=x=pTurtle->x;
+		old_y=y=pTurtle->y;
+		for (int i=0; i<step; i++)
+		{
+			if ((i+1)<step)
+			{
+				x+=delta_x;
+				y+=delta_y;
 			}
-			while (x>myworld.width) {
-				x-=myworld.width;
+			else
+			{
+				x+=(step-i)*delta_x;
+				y+=(step-i)*delta_y;
 			}
-	    	while (y<0) {
-				y+=myworld.height;
+			
+			if (pWorld->is_rewind)
+			{
+				if (x<0)
+				{
+					x+=pWorld->width;
+					old_x+=pWorld->width;
+				}
+				else if (x>pWorld->width)
+				{
+					x-=pWorld->width;
+					old_x-=pWorld->width;
+				}
+				if (y<0)
+				{
+					y+=pWorld->height;
+					old_y+=pWorld->height;
+				}
+				else if (y>pWorld->height)
+				{
+					y-=pWorld->height;
+					old_y-=pWorld->height;
+				}
 			}
-			while (y>myworld.height) {
-				y-=myworld.height;
+			if (pTurtle->is_pen_down)
+			{
+				ImageDrawLine(
+					&pWorld->world_image,
+					round(old_x*pWorld->scale),
+					round(old_y*pWorld->scale),
+					round(x*pWorld->scale),
+					round(y*pWorld->scale),
+					pTurtle->pen_color);
 			}
-	    }
-	    if (myturtle.is_pen_down) {
-	    	ege_line(round(myturtle.x*myworld.scale),round(myturtle.y*myworld.scale),round(x*myworld.scale),round(y*myworld.scale),myworld.world_image);
-	    }
-	    myturtle.x=x;
-	    myturtle.y=y;
-   	}
+			old_x=x;
+			old_y=y;
+			pTurtle->x=x;
+			pTurtle->y=y;
+			refreshWorld();
+		}
+	} else {
+		x=pTurtle->x+step*delta_x;
+		y=pTurtle->y+step*delta_y;
+		if (pWorld->is_rewind) {
+			while (x<0) {
+				x+=pWorld->width;
+			}
+			while (x>pWorld->width) {
+				x-=pWorld->width;
+			}
+			while (y<0) {
+				y+=pWorld->height;
+			}
+			while (y>pWorld->height) {
+				y-=pWorld->height;
+			}
+		}
+		if (pTurtle->is_pen_down) {
+			ImageDrawLine(
+				&pWorld->world_image,
+				round(pTurtle->x*pWorld->scale),round(pTurtle->y*pWorld->scale),
+				round(x*pWorld->scale),round(y*pWorld->scale),
+				pTurtle->pen_color);
+		}
+		pTurtle->x=x;
+		pTurtle->y=y;
+	}
 	refreshWorld();
 }
 void bk(double step)
 {
-    backward(step);
+	backward(step);
 }
 void backward(double step)
 {
-    forward(-step);
+	forward(-step);
 }
 void lt(double degree)
 {
-    leftTurn(degree);
+	leftTurn(degree);
 }
 void leftTurn(double degree)
 {
-    double origin_angle=myturtle.orient;
-    if (!myworld.immediate)
-    {
-        if (degree>0)
-        {
-            for (int i=0; i<degree; i+=2)
-            {
-                myturtle.orient=origin_angle-i;
-                //prepareTurtleIcon();
-                refreshWorld();
-            }
-        }
-        else
-        {
-            for (int i=0; i<-degree; i+=2)
-            {
-                myturtle.orient=origin_angle+i;
-                //prepareTurtleIcon();
-                refreshWorld();
-            }
-        }
-    }
-    degree=degree-(int)degree/360*360;
-    myturtle.orient=origin_angle-degree;
-    if (myturtle.orient>360)
-    {
-        myturtle.orient-=360;
-    }
-    if (myturtle.orient<0)
-    {
-        myturtle.orient+=360;
-    }
-    //prepareTurtleIcon();
-    refreshWorld();
+	double origin_angle=pTurtle->orient;
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	if (!pWorld->is_immediate)
+	{
+		if (degree>0)
+		{
+			for (int i=0; i<degree; i+=2)
+			{
+				pTurtle->orient=origin_angle-i;
+				refreshWorld();
+			}
+		}
+		else
+		{
+			for (int i=0; i<-degree; i+=2)
+			{
+				pTurtle->orient=origin_angle+i;
+				refreshWorld();
+			}
+		}
+	}
+	degree=degree-(int)degree/360*360;
+	pTurtle->orient=origin_angle-degree;
+	if (pTurtle->orient>360)
+	{
+		pTurtle->orient-=360;
+	}
+	if (pTurtle->orient<0)
+	{
+		pTurtle->orient+=360;
+	}
+	//prepareTurtleIcon();
+	refreshWorld();
 }
 void rt(double degree)
 {
-    rightTurn(degree);
+	rightTurn(degree);
 }
 void rightTurn(double degree)
 {
-    lt(-degree);
+	lt(-degree);
 }
+
 void pd()
 {
-    penDown();
+	penDown();
 }
+
 void penDown()
 {
-    myturtle.is_pen_down=TRUE;
+	if (pWorld==NULL)
+		return;
+	pTurtle->is_pen_down = true;
 }
+
 void penUp()
 {
-    myturtle.is_pen_down=FALSE;
+	if (pWorld==NULL)
+		return;
+	pTurtle->is_pen_down = false;
 }
+
 void pu()
 {
-    penUp();
+	penUp();
 }
+
+void setPenDown(bool isPenDown) {
+	if (pWorld==NULL)
+		return;
+	pTurtle->is_pen_down = isPenDown;
+}
+
+bool isPenDown() {
+	if (pWorld==NULL)
+		return false;
+	return pTurtle->is_pen_down;
+}
+
 void clearScreen()
 {
-    cleardevice(myworld.world_image);
-
-    myturtle.x=myworld.origin_x;
-    myturtle.y=myworld.origin_y;
-    myturtle.orient=-90;
-    //prepareTurtleIcon();
-    refreshWorld();
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	ImageClearBackground(&pWorld->world_image,BLANK);
+		
+	pTurtle->x=pWorld->origin_x;
+	pTurtle->y=pWorld->origin_y;
+	pTurtle->orient=-90;
+	refreshWorld();
 }
 
 void cs()
 {
-    clearScreen();
+	clearScreen();
 }
 void clear()
 {
-    clearScreen();
+	clearScreen();
 }
 
 void home()
 {
-    int to_x,to_y;
-
-    to_x=myworld.origin_x;
-    to_y=myworld.origin_y;
-    if (myturtle.is_pen_down)
-    {
-        ege_line(myturtle.x*myworld.scale,myturtle.y*myworld.scale,to_x*myworld.scale,to_y*myworld.scale,myworld.world_image);
-    }
-    myturtle.x=to_x;
-    myturtle.y=to_y;
-    myturtle.orient=-90;
-    //prepareTurtleIcon();
-    refreshWorld();
+	int to_x,to_y;
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	to_x=pWorld->origin_x;
+	to_y=pWorld->origin_y;
+	if (pTurtle->is_pen_down)
+	{
+		ImageDrawLine(
+			&pWorld->world_image,
+			pTurtle->x*pWorld->scale,
+			pTurtle->y*pWorld->scale,
+			to_x*pWorld->scale,
+			to_y*pWorld->scale,
+			pTurtle->pen_color
+			);
+	}
+	pTurtle->x=to_x;
+	pTurtle->y=to_y;
+	pTurtle->orient=-90;
+	//prepareTurtleIcon();
+	refreshWorld();
 }
 void setPenSize(int size)
 {
-    myturtle.pen_size=size;
-    setlinestyle(SOLID_LINE,0,size,myworld.world_image);
-    setlinewidth(size,myworld.world_image);
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	pTurtle->pen_size=size;
 };
-void setPenColor(color_t color)
+void setPenColor(Color color)
 {
-    myturtle.pen_color=color;
-    setcolor(color,myworld.world_image);
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	pTurtle->pen_color=color;
 }
+
 void setSpeed(int speed)
 {
-    if (speed>=1)
-    {
-        myturtle.pen_speed=speed;
-    }
-    else
-    {
-        myturtle.pen_speed=1;
-    }
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	if (speed>=1)
+	{
+		pTurtle->move_speed=speed;
+	}
+	else
+	{
+		pTurtle->move_speed=1;
+	}
 }
+
 void setRewind(int isRewind)
 {
-    myworld.rewind=isRewind;
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;	
+	pWorld->is_rewind=isRewind;
 }
+
 void setImmediate(int isImmediate)
 {
-    myworld.immediate=isImmediate;
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	pWorld->is_immediate=isImmediate;
 }
-void pause()
-{
-    myworld.frame_count=0;
-    //prepareTurtleIcon();
-    displayWorld();
-    getch();
-}
+
 void show()
 {
-    myturtle.is_show=TRUE;
-    refreshWorld();
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	pTurtle->is_show=true;
+	refreshWorld();
 }
+
 void hide()
 {
-    myturtle.is_show=FALSE;
-    refreshWorld();
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	pTurtle->is_show=false;
+	refreshWorld();
 }
 
 void setXY(double x, double y)
 {
-    myturtle.x=myworld.origin_x+x;
-    myturtle.y=myworld.origin_y-y;
-    refreshWorld();
+	pTurtle->x=pWorld->origin_x+x;
+	pTurtle->y=pWorld->origin_y-y;
+	refreshWorld();
 }
 
 double getX()
 {
-    int cent_x;
-    cent_x=round(myworld.width/2);
-    return myturtle.x-cent_x;
+	if (pWorld==NULL)
+		return 0;
+	if (pWorld->window_should_close)
+		return 0;
+	return pTurtle->x-pWorld->origin_x;
 }
+
 double getY()
 {
-    int cent_y;
-    cent_y=round(myworld.height/2);
-    return cent_y-myturtle.y;
+	if (pWorld==NULL)
+		return 0;
+	if (pWorld->window_should_close)
+		return 0;
+	return pWorld->origin_y-pTurtle->y;
 }
 void setAngle(double angle)
 {
-    myturtle.orient=-angle;
-    //prepareTurtleIcon();
-    refreshWorld();
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	pTurtle->orient=-angle;
+	refreshWorld();
 }
+
 double getAngle()
 {
-    return -myturtle.orient;
+	if (pWorld==NULL)
+		return 0;
+	if (pWorld->window_should_close)
+		return 0;
+	return -pTurtle->orient;
 }
 
 TurtleState getState()
 {
-    TurtleState state;
-    state.x=getX();
-    state.y=getY();
-    state.angle=getAngle();
-    return state;
+	TurtleState state;
+	if (pWorld==NULL)
+		return state;
+	if (pWorld->window_should_close)
+		return state;
+	state.x=getX();
+	state.y=getY();
+	state.angle=getAngle();
+	return state;
 }
 
 void setState(TurtleState state)
 {
-    BOOL pd=myturtle.is_pen_down;
-    myturtle.is_pen_down=0;
-    setXY(state.x,state.y);
-    setAngle(state.angle);
-    myturtle.is_pen_down=pd;
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	setXY(state.x,state.y);
+	setAngle(state.angle);
 }
+
 void faceXY(double x,double y)
 {
-    x=myworld.origin_x+x;
-    y=myworld.origin_y-y;
-    double delta_x=x-myturtle.x;
-    double delta_y=-(y-myturtle.y);
-    double angle=atan2(delta_y,delta_x)/M_PI*180;
-    turnTo(angle);
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	x=pWorld->origin_x+x;
+	y=pWorld->origin_y-y;
+	double delta_x=x-pTurtle->x;
+	double delta_y=-(y-pTurtle->y);
+	double angle=atan2(delta_y,delta_x)/M_PI*180;
+	turnTo(angle);
 }
 
 void turnTo(double angle)
 {
-    double turn_angle;
-    turn_angle=-angle - myturtle.orient ;
-    while (turn_angle>180)
-    {
-        turn_angle=turn_angle-360;
-    }
-    while (turn_angle<-180)
-    {
-        turn_angle=360+turn_angle;
-    }
-    rt(turn_angle);
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	double turn_angle;
+	turn_angle=-angle - pTurtle->orient ;
+	while (turn_angle>180)
+	{
+		turn_angle=turn_angle-360;
+	}
+	while (turn_angle<-180)
+	{
+		turn_angle=360+turn_angle;
+	}
+	rt(turn_angle);
 }
 void gotoXY(double x, double y)
 {
-    faceXY(x,y);
-
-    x=myworld.origin_x+x;
-    y=myworld.origin_y-y;
-    double delta_x=x-myturtle.x;
-    double delta_y=-(y-myturtle.y);
-    double step=sqrt(delta_x*delta_x+delta_y*delta_y);
-    fd(step);
-    myturtle.x=x;
-    myturtle.y=y;
-    //prepareTurtleIcon();
-    refreshWorld();
-}
-
-double randBetween(double start,double end)
-{
-    return (end-start)*randomf()+start;
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	faceXY(x,y);
+	
+	x=pWorld->origin_x+x;
+	y=pWorld->origin_y-y;
+	double delta_x=x-pTurtle->x;
+	double delta_y=-(y-pTurtle->y);
+	double step=sqrt(delta_x*delta_x+delta_y*delta_y);
+	fd(step);
+	pTurtle->x=x;
+	pTurtle->y=y;
+	refreshWorld();
 }
 
 void setOrigin(int x, int y)
 {
-    myworld.origin_x=myworld.origin_x+x;
-    myworld.origin_y=myworld.origin_y-y;
-    home();
-    clearScreen();
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	pWorld->origin_x=pWorld->origin_x+x;
+	pWorld->origin_y=pWorld->origin_y-y;
+	home();
+	clearScreen();
 }
 
 
 void setCaption(const char* title)
 {
-    setcaption(title);
+	SetWindowTitle(title);
 }
 
-void setBackgroundImage(PIMAGE backImg)
+void setBackgroundImage(Image backImg)
 {
-	if (backImg == NULL) {
-		myworld.background_image = myworld.default_background;
-	} else {
-		myworld.background_image = backImg;
-	}
+	if (pWorld==NULL)
+		return;
+	if (pWorld->window_should_close)
+		return;
+	if (pWorld->use_background_image) {
+		UnloadTexture(pWorld->background);
+		pWorld->use_background_image = false;
+	} 
+	pWorld->background = LoadTextureFromImage(backImg);
+	pWorld->use_background_image = true;
+	refreshWorld();
 }
 
-int setBackgroundImage(const char* filename) {
-	ege::PIMAGE img = ege::newimage();
-	int result = ege::getimage(img,filename);
-	if (result!=ege::grOk) 
-		return result;
-	setBackgroundImage(img);
-	return result;
+int setBackgroundImageFile(const char* filename) {
+	if (pWorld==NULL)
+		return 0;
+	if (pWorld->window_should_close)
+		return 0;
+	if (pWorld->use_background_image) {
+		UnloadTexture(pWorld->background);
+		pWorld->use_background_image = false;
+	} 
+	if (filename==NULL) 
+		return 0;
+	Image image = LoadImage(filename);
+	setBackgroundImage(image);
+	UnloadImage(image);
+	return 0;
 }
 
-int setBackgroundImage(const wchar_t* filename) {
-	ege::PIMAGE img = ege::newimage();
-	int result = ege::getimage(img,filename);
-	if (result!=ege::grOk) 
-		return result;
-	setBackgroundImage(img);
-	return result;
-}
-
-
-void setBackgroundColor(ege::color_t color)
+void setBackgroundColor(Color color)
 {
-	myworld.back_color = color;
-	setbkcolor(color,myworld.default_background);
+	if (pWorld==NULL)
+		return ;
+	if (pWorld->window_should_close)
+		return ;
+	pWorld->back_color = color;
+	refreshWorld();
 }
 
-void fill() {
-    int x = round(myturtle.x*myworld.scale);
-    int y = round(myturtle.y*myworld.scale);
-    int w = myworld.width * myworld.scale;
-    int h = myworld.height * myworld.scale;
-    color_t* buffer = getbuffer(myworld.world_image);
-	color_t c=buffer[y*w+x];
-	std::queue<int> points_x;
-	std::queue<int> points_y;
-	points_x.push(x);
-	points_y.push(y);
-	while (!points_x.empty()) {
-		int t_x = points_x.front();
-		int t_y = points_y.front();
-		points_x.pop();
-		points_y.pop();
-		if (t_x<0 || t_x >= w)
-			continue;
-		if (t_y<0 || t_y >= h)
-			continue;
-		if (buffer[t_y*w+t_x]!=c) {
-			continue;
-		}
-		buffer[t_y*w+t_x] = myturtle.pen_color;
-		points_x.push(t_x-1);
-		points_y.push(t_y);
-		points_x.push(t_x+1);
-		points_y.push(t_y);
-		points_x.push(t_x);
-		points_y.push(t_y-1);
-		points_x.push(t_x);
-		points_y.push(t_y+1);
-	}
-}
