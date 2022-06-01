@@ -7,7 +7,7 @@
 
 #define BASE_STEP 1
 
-    #define COLOR_EQUAL(col1, col2) ((col1.r == col2.r) && (col1.g == col2.g) && (col1.b == col2.b) && (col1.a == col2.a))
+#define COLOR_EQUAL(col1, col2) ((col1.r == col2.r) && (col1.g == col2.g) && (col1.b == col2.b) && (col1.a == col2.a))
 
 typedef struct
 {
@@ -28,7 +28,6 @@ typedef struct
 {
 	int width;
 	int height;
-	double scale;
 	Color back_color;
 	bool is_rewind;
 	bool is_immediate;
@@ -165,17 +164,101 @@ static void prepareTurtleOriginIcon()
 	UnloadImage(icon);
 }
 
+static void doDrawLineLow(int x0, int y0, int x1, int y1) {
+	if (x1<x0) {
+		std::swap(x0,x1);
+		std::swap(y0,y1);
+	}
+	int dx = x1 - x0;
+	int dy = y1 - y0;
+	int yi;
+	if (dy<0) {
+		yi=-1;
+		dy=-dy;
+	} else {
+		yi=1;
+	}
+	int D = (2*dy)-dx;
+	int y=y0;
+	int	w = pTurtle->pen_size/2.0*dx/sqrt(dx*dx+dy*dy); 
+	for (int x=x0;x<=x1;x++) {
+		for (int yy=y-w;yy<=y+w;yy++) {
+			ImageDrawPixel(&pWorld->world_image,
+				x,yy,pTurtle->pen_color);
+		}
+		if (D>0) {
+			y+=yi;
+			D+=2*(dy-dx);
+		}else{
+			D+=2*dy;
+		}
+	}
+}
+
+static void doDrawLineHigh(int x0, int y0, int x1, int y1) {
+	if (y1<y0) {
+		std::swap(x0,x1);
+		std::swap(y0,y1);
+	}		
+	int dx = x1 - x0;
+	int dy = y1 - y0;
+	int xi;
+	if (dx<0) {
+		xi = -1;
+		dx = -dx;
+	} else {
+		xi = 1;
+	}
+	int D = (2*dx) - dy;
+	int x = x0;
+	int	w = pTurtle->pen_size/2.0*dy/sqrt(dx*dx+dy*dy);
+	for (int y=y0;y<=y1;y++) {
+		for (int xx=x-w;xx<=x+w;xx++) {
+			ImageDrawPixel(&pWorld->world_image,
+				xx,y,pTurtle->pen_color);
+		}
+		if (D>0) {
+			x+=xi;
+			D+=2*(dx-dy);
+		}else{
+			D+=2*dx;
+		}
+	}	
+} 
+
+static void doDrawLine(float x0, float y0, float x1, float y1) {
+	if (abs(y1-y0)<abs(x1-x0)) {
+		doDrawLineLow(x0,y0,x1,y1);
+	} else {
+		doDrawLineHigh(x0,y0,x1,y1);
+	}
+
+}
+
+void drawLine(float x0, float y0, float x1, float y1) {
+	if (pWorld==NULL)
+		return ;
+	if (pWorld->window_should_close)
+		return ;	
+	doDrawLine(
+		pWorld->origin_x+x0,
+		pWorld->origin_y-y0,
+		pWorld->origin_x+x1,
+		pWorld->origin_y-y1		
+		);
+	refreshWorld();
+}
 
 void initWorld(int width,int height){
 	if (pWorld!=NULL)
 		return;
 	InitWindow(width,height,"Turtle World");
-	SetTargetFPS(30);
+	SetTargetFPS(120);
+	SetTraceLogLevel(LOG_WARNING);
 	
 	pWorld = (World*)malloc(sizeof(World));
 	pWorld->width = width;
 	pWorld->height = height;
-	pWorld->scale = 1.0;
 	pWorld->back_color = WHITE;
 	pWorld->is_rewind = false;
 	pWorld->is_immediate = false;
@@ -285,13 +368,11 @@ void forward(double step)
 			}
 			if (pTurtle->is_pen_down)
 			{
-				ImageDrawLine(
-					&pWorld->world_image,
-					round(old_x*pWorld->scale),
-					round(old_y*pWorld->scale),
-					round(x*pWorld->scale),
-					round(y*pWorld->scale),
-					pTurtle->pen_color);
+				doDrawLine(
+					old_x,
+					old_y,
+					x,
+					y);
 			}
 			old_x=x;
 			old_y=y;
@@ -317,11 +398,11 @@ void forward(double step)
 			}
 		}
 		if (pTurtle->is_pen_down) {
-			ImageDrawLine(
-				&pWorld->world_image,
-				round(pTurtle->x*pWorld->scale),round(pTurtle->y*pWorld->scale),
-				round(x*pWorld->scale),round(y*pWorld->scale),
-				pTurtle->pen_color);
+			doDrawLine(
+				pTurtle->x,
+				pTurtle->y,
+				x,
+				y);
 		}
 		pTurtle->x=x;
 		pTurtle->y=y;
@@ -431,7 +512,7 @@ void clearScreen()
 	if (pWorld->window_should_close)
 		return;
 	ImageClearBackground(&pWorld->world_image,BLANK);
-		
+	
 	pTurtle->x=pWorld->origin_x;
 	pTurtle->y=pWorld->origin_y;
 	pTurtle->orient=-90;
@@ -458,13 +539,11 @@ void home()
 	to_y=pWorld->origin_y;
 	if (pTurtle->is_pen_down)
 	{
-		ImageDrawLine(
-			&pWorld->world_image,
-			pTurtle->x*pWorld->scale,
-			pTurtle->y*pWorld->scale,
-			to_x*pWorld->scale,
-			to_y*pWorld->scale,
-			pTurtle->pen_color
+		doDrawLine(
+			pTurtle->x,
+			pTurtle->y,
+			to_x,
+			to_y
 			);
 	}
 	pTurtle->x=to_x;
@@ -718,6 +797,145 @@ void setBackgroundColor(Color color)
 	if (pWorld->window_should_close)
 		return ;
 	pWorld->back_color = color;
+	refreshWorld();
+}
+
+static void fill2EllipseLines(float CX, float CY, float X, float Y, Color color) {
+	
+	int x1 = round(CX-X);
+	int x2 = round(CX+X);
+	if (x2<x1)
+		std::swap(x1,x2);
+	x1 = std::max(0,x1);
+	x2 = std::min(x2,pWorld->width-1);
+	int y1=round(CY-Y);
+	int y2=round(CY+Y);
+	if (y1>=0 && y1<pWorld->height) {
+		for (int x=x1;x<=x2;x++) {
+			ImageDrawPixel(&pWorld->world_image, x, y1 ,color);		
+		}
+	} 
+	if (y2>=0 && y2<pWorld->height) {
+		for (int x=x1;x<=x2;x++) {
+			ImageDrawPixel(&pWorld->world_image, x, y2 ,color);		
+		}
+	} 
+}
+
+//algorithms from  https://web.archive.org/web/20120225095359/http://homepage.smc.edu/kennedy_john/belipse.pdf
+
+static void doFillEllipse(float centerX, float centerY, float radiusX, float radiusY, Color fillColor) {
+	float twoASquare=round(2*radiusX*radiusX);
+	float twoBSquare=round(2*radiusY*radiusY);
+	float x=radiusX;
+	float y=0;
+	float XChange = radiusY*radiusY*(1-2*radiusX);
+	float YChange = radiusX*radiusX;
+	float ellipseError = 0;
+	float stoppingX = twoBSquare*radiusX;
+	float stoppingY = 0;
+	//first stage, y'>-1
+	while (stoppingX>=stoppingY) {
+		fill2EllipseLines(centerX,centerY,x,y,fillColor);
+		y+=1;
+		stoppingY += twoASquare;
+		ellipseError += YChange;
+		YChange += twoASquare;
+		if ((2*ellipseError+XChange)>0){
+			x-=1;
+			stoppingX -= twoBSquare;
+			ellipseError += XChange;
+			XChange+=twoBSquare;
+		}
+	}
+	//second stage, y'<-1
+	x=0;
+	y=radiusY;
+	XChange = radiusY * radiusY;
+	YChange = radiusX * radiusX * (1-2*radiusY);
+	ellipseError = 0;
+	stoppingX = 0;
+	stoppingY = twoASquare*radiusY;
+	while (stoppingX<=stoppingY) {
+		x++;
+		stoppingX+=twoBSquare;
+		ellipseError += XChange;
+		XChange+=twoBSquare;
+		if ((2*ellipseError+YChange)>0) {
+			fill2EllipseLines(centerX,centerY,x,y,fillColor);
+			y-=1;
+			stoppingY-=twoASquare;
+			ellipseError+=YChange;
+			YChange+=twoASquare;
+		}				
+	}
+}
+
+static void doFillCircle(float centerX, float centerY, float radius, Color fillColor) {
+	float twoASquare=round(2*radius*radius);
+	float x=radius;
+	float y=0;
+	float XChange = radius*radius*(1-2*radius);
+	float YChange = radius*radius;
+	float ellipseError = 0;
+	float stoppingX = twoASquare*radius;
+	float stoppingY = 0;
+	//first stage, y'>-1
+	while (stoppingX>=stoppingY) {
+		fill2EllipseLines(centerX,centerY,x,y,fillColor);
+		y+=1;
+		stoppingY += twoASquare;
+		ellipseError += YChange;
+		YChange += twoASquare;
+		if ((2*ellipseError+XChange)>0){
+			fill2EllipseLines(centerX,centerY,y,x,fillColor);
+			x-=1;
+			stoppingX -= twoASquare;
+			ellipseError += XChange;
+			XChange+=twoASquare;
+		}
+	}
+}
+
+void fillEllipse(float centerX, float centerY, float radiusX, float radiuxY, Color fillColor) {
+	if (pWorld==NULL)
+		return ;
+	if (pWorld->window_should_close)
+		return ;	
+	doFillEllipse(
+		pWorld->origin_x+centerX,
+		pWorld->origin_y-centerY,
+		radiusX,
+		radiuxY,
+		fillColor
+		);
+	refreshWorld();
+}
+
+void fillCircle(float centerX, float centerY, float radius, Color fillColor) {
+	if (pWorld==NULL)
+		return ;
+	if (pWorld->window_should_close)
+		return ;	
+	doFillCircle(
+		pWorld->origin_x+centerX,
+		pWorld->origin_y-centerY,
+		radius,
+		fillColor
+		);
+	refreshWorld();
+}
+
+static void doDrawPoint(float x, float y) {
+	doFillCircle(x,y,pTurtle->pen_size/2.0,pTurtle->pen_color);
+}
+
+void drawPoint(float x, float y) {
+	if (pWorld==NULL)
+		return ;
+	if (pWorld->window_should_close)
+		return ;	
+	doDrawPoint(pWorld->origin_x+x,pWorld->origin_y-y);
 	refreshWorld();
 }
 

@@ -1,9 +1,9 @@
 #ifndef TURTLE_H
 #define TURTLE_H
+
 #include <raylib.h>
 #include <pthread.h>
-
-#define	ALICEBLUE              CLITERAL(Color){ 0xF0, 0xF8, 0xFF, 255 }  
+#define	ALICEBLUE              CLITERAL(Color){ 0xF0, 0xF8, 0xFF, 255 }
 #define	ANTIQUEWHITE           CLITERAL(Color){ 0xFA, 0xEB, 0xD7, 255 }  
 #define	AQUA                   CLITERAL(Color){ 0x00, 0xFF, 0xFF, 255 }  
 #define	AQUAMARINE             CLITERAL(Color){ 0x7F, 0xFF, 0xD4, 255 }  
@@ -179,6 +179,12 @@ void setCaption(const char* title);
 void setBackgroundImage(Image backImg);
 int setBackgroundImageFile(const char* filename);
 void setBackgroundColor(Color color);
+
+void fillEllipse(float centerX, float centerY, float radiusX, float radiusY, Color fillColor);
+void fillCircle(float centerX, float centerY, float radiusX, Color fillColor);
+void drawPoint(float x, float y);
+void drawLine(float x0, float y0, float x1, float y1);
+
 
 #if defined(__cplusplus)
 }            // Prevents name mangling of functions

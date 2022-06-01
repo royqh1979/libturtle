@@ -11,7 +11,14 @@ int main() {
     //setBackgroundImage(back);
 	//setBackgroundColor(GREEN);
     //setbkcolor(WHITE);
-    setSpeed(5000);
+	
+    setSpeed(100);
+	//fillEllipse(100,100,4,4,RED);
+	
+	//fillCircle(200,200,60,BLUE);
+	setPenColor(LIGHTRED);
+	setPenSize(5);
+
     //setImmediate(TRUE);
     //setPenColor(BLACK);
     for(int i=0;i<4;i++) {
