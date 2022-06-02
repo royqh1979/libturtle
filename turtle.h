@@ -180,10 +180,12 @@ void setBackgroundImage(Image backImg);
 int setBackgroundImageFile(const char* filename);
 void setBackgroundColor(Color color);
 
-void fillEllipse(int centerX, int centerY, int radiusX, int radiusY, Color fillColor);
-void fillCircle(int centerX, int centerY, int radiusX, Color fillColor);
+void fill(Color fillColor);
+
 void drawPoint(int x, int y);
 void drawLine(int x0, int y0, int x1, int y1);
+void drawEllipse(int centerX, int centerY, int radiusX, int radiusY);
+void fillEllipse(int centerX, int centerY, int radiusX, int radiusY, Color fillColor);
 
 
 #if defined(__cplusplus)
